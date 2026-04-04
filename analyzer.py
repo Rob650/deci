@@ -31,7 +31,7 @@ ANALYSIS_PROMPT = """Analyze this project using all provided data sources and pr
 
 Produce a JSON report with EXACTLY these keys. ALL values must be plain strings — no nested objects.
 
-{{
+{
   "executive_summary": "3-4 sentences. Include: (1) what this project is and what problem it solves, (2) current stage (mainnet/testnet/pre-launch), (3) one key metric (TVL, market cap, GitHub stars, or user count), and (4) the single most critical insight — positive or negative — that an investor must know. Be specific, no fluff.",
 
   "project_focus": "Technical deep-dive covering ALL of the following you can determine from the data:\\n• Layer: L1 / L2 / L3 / application / infrastructure\\n• Consensus mechanism (PoS, PoW, PoA, DPoS, etc.) if applicable\\n• VM / execution environment (EVM-compatible, custom VM, WASM, etc.)\\n• Smart contract language (Solidity, Rust, Move, Cairo, etc.)\\n• Key protocol design choices (rollup type, data availability, sequencer model, etc.)\\n• Specific use cases with named examples (e.g. 'enables Uniswap-style AMM for X asset class')\\n• Claimed performance metrics (TPS, finality time, gas costs) — quote directly from website\\n• What is genuinely novel vs. what is copied from existing solutions",
@@ -58,7 +58,7 @@ Produce a JSON report with EXACTLY these keys. ALL values must be plain strings 
 
   "tags": "comma-separated list of 3-8 relevant tags (e.g. 'ethereum, layer2, zk-rollup, privacy'). Lowercase, concise.",
 
-  "scores": {{
+  "scores": {
     "team": <integer 1-10>,
     "technology": <integer 1-10>,
     "tokenomics": <integer 1-10>,
@@ -70,8 +70,8 @@ Produce a JSON report with EXACTLY these keys. ALL values must be plain strings 
     "tokenomics_rationale": "2-3 specific reasons for this score (cite supply numbers, vesting, utility)",
     "community_rationale": "2-3 specific reasons for this score (cite follower counts, GitHub stats)",
     "execution_rationale": "2-3 specific reasons for this score (cite milestone delivery record, stage)"
-  }}
-}}
+  }
+}
 
 Scoring rubric (be honest — do not inflate):
 - 9-10: Exceptional. Top-tier team/tech/metrics, clear differentiation, strong evidence.
@@ -229,10 +229,7 @@ def analyze(scraped_data: dict, sources: dict | None = None) -> dict:
     if not content_block.strip():
         return _empty_report()
 
-    prompt = ANALYSIS_PROMPT.format(
-        website_content=content_block,
-        external_data=external_data[:MAX_SOURCES_CHARS],
-    )
+    prompt = ANALYSIS_PROMPT.replace("{website_content}", content_block).replace("{external_data}", external_data[:MAX_SOURCES_CHARS])
 
     message = client.messages.create(
         model=MODEL,
