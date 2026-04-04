@@ -48,6 +48,10 @@ Produce a JSON report with EXACTLY these keys. Be thorough, specific, and honest
 
   "risk_assessment": "Structured risk breakdown:\\n• Team Risk: [assessment]\\n• Technical Risk: [assessment]\\n• Tokenomics Risk: [assessment]\\n• Market/Competition Risk: [assessment]\\n• Regulatory Risk: [assessment]\\n• Execution Risk: [assessment]\\n\\nOverall Risk Rating: LOW / MEDIUM / HIGH / VERY HIGH",
 
+  "sector": "ONE of: AI, DeFi, Gaming, Meme, L1/L2, NFT, Infrastructure, Social, RWA, Privacy, Oracle, DEX, Lending, Payments, Other",
+
+  "tags": "comma-separated list of 3-8 relevant tags (e.g. 'ethereum, layer2, zk-rollup, privacy'). Lowercase, concise.",
+
   "scores": {{
     "team": <integer 1-10>,
     "technology": <integer 1-10>,
@@ -252,6 +256,17 @@ def analyze(scraped_data: dict, sources: dict | None = None) -> dict:
         if k not in report:
             report[k] = "Not available."
 
+    # Normalize sector
+    valid_sectors = {
+        "AI", "DeFi", "Gaming", "Meme", "L1/L2", "NFT", "Infrastructure",
+        "Social", "RWA", "Privacy", "Oracle", "DEX", "Lending", "Payments", "Other",
+    }
+    sector = report.get("sector", "Other")
+    if sector not in valid_sectors:
+        report["sector"] = "Other"
+    if "tags" not in report or not isinstance(report.get("tags"), str):
+        report["tags"] = ""
+
     # Validate and normalize scores
     if "scores" not in report or not isinstance(report.get("scores"), dict):
         report["scores"] = {"team": 5, "technology": 5, "tokenomics": 5, "community": 5, "execution": 5, "overall": 5.0}
@@ -283,6 +298,7 @@ def _empty_report() -> dict:
         "competitive_landscape": "N/A", "community_social": "N/A",
         "on_chain_metrics": "N/A", "recent_events": "N/A",
         "risk_assessment": "Unable to analyze — no content was scraped.",
+        "sector": "Other", "tags": "",
         "scores": {"team": 1, "technology": 1, "tokenomics": 1, "community": 1, "execution": 1, "overall": 1.0},
     }
 
@@ -295,5 +311,58 @@ def _error_report(raw: str) -> dict:
         "competitive_landscape": "N/A", "community_social": "N/A",
         "on_chain_metrics": "N/A", "recent_events": raw[:2000],
         "risk_assessment": "N/A",
+        "sector": "Other", "tags": "",
         "scores": {"team": 5, "technology": 5, "tokenomics": 5, "community": 5, "execution": 5, "overall": 5.0},
     }
+
+
+# ── Compare ──────────────────────────────────────────────────────────────────
+
+COMPARE_PROMPT = """You are Deci, a crypto/tech project intelligence analyst. Compare the following projects for an investor.
+
+{projects_data}
+
+---
+
+Write a competitive intelligence comparison covering:
+1. **Side-by-Side Overview** — brief summary of each project's positioning
+2. **Category Winners** — for each of Team, Technology, Tokenomics, Community, Execution: state which project wins and why (1-2 sentences each)
+3. **Key Differentiators** — what truly separates these projects from each other
+4. **Investment Verdict** — which project(s) are most compelling and why; who should avoid each
+
+Be specific, direct, and data-driven. Reference scores and metrics. Format with clear headers."""
+
+
+def compare_projects(projects: list[dict]) -> str:
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not set.")
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    blocks = []
+    for p in projects:
+        scores = p.get("scores", {})
+        analysis = p.get("analysis", {})
+        block = f"""### {p.get('name', p.get('url', 'Unknown'))} — {p.get('url', '')}
+Sector: {p.get('sector', 'Unknown')} | Tags: {p.get('tags', 'N/A')}
+Scores — Team: {scores.get('team', 'N/A')}, Technology: {scores.get('technology', 'N/A')}, Tokenomics: {scores.get('tokenomics', 'N/A')}, Community: {scores.get('community', 'N/A')}, Execution: {scores.get('execution', 'N/A')}, Overall: {scores.get('overall', 'N/A')}
+Summary: {p.get('summary', 'N/A')}
+
+Team: {str(analysis.get('team', 'N/A'))[:400]}
+Technology: {str(analysis.get('project_focus', 'N/A'))[:400]}
+Tokenomics: {str(analysis.get('tokenomics', 'N/A'))[:300]}
+Competitive Landscape: {str(analysis.get('competitive_landscape', 'N/A'))[:300]}
+Risk: {str(analysis.get('risk_assessment', 'N/A'))[:300]}"""
+        blocks.append(block)
+
+    prompt = COMPARE_PROMPT.format(projects_data="\n\n---\n\n".join(blocks))
+
+    message = client.messages.create(
+        model=MODEL,
+        max_tokens=3000,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    return message.content[0].text.strip()
