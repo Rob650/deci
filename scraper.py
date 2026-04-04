@@ -62,6 +62,30 @@ MAX_RETRIES = 3
 JS_RENDER_THRESHOLD = 100
 
 
+def _decode_response(resp: requests.Response) -> str:
+    """Decode a response body with proper encoding detection."""
+    # Try chardet-detected encoding first
+    detected = resp.apparent_encoding
+    if detected:
+        try:
+            return resp.content.decode(detected, errors="replace")
+        except (LookupError, UnicodeDecodeError):
+            pass
+    # Fall back to UTF-8 with replacement
+    return resp.content.decode("utf-8", errors="replace")
+
+
+def is_garbled(text: str, threshold: float = 0.30) -> bool:
+    """Return True if more than `threshold` fraction of chars are non-printable / garbage."""
+    if not text:
+        return True
+    non_printable = sum(
+        1 for ch in text
+        if ord(ch) < 32 and ch not in ("\n", "\r", "\t")
+    )
+    return (non_printable / len(text)) > threshold
+
+
 def is_same_domain(url: str, base: str) -> bool:
     try:
         return urlparse(url).netloc == urlparse(base).netloc
@@ -108,7 +132,7 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
                     return extract_pdf_text(resp.content)
                 if "text" not in content_type and "html" not in content_type:
                     return None
-                return resp.text
+                return _decode_response(resp)
             if resp.status_code >= 500:
                 time.sleep(2 ** attempt)
                 continue
@@ -130,7 +154,7 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
                         return extract_pdf_text(resp.content)
                     if "text" not in content_type and "html" not in content_type:
                         return None
-                    return resp.text
+                    return _decode_response(resp)
             except Exception:
                 pass
             break
@@ -169,6 +193,8 @@ async def fetch_with_playwright(url: str) -> str | None:
             await page.wait_for_timeout(2000)
             text = await page.inner_text("body")
             await browser.close()
+            if text:
+                text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
             return text if text else None
     except PlaywrightTimeout:
         # Retry with a fresh browser using domcontentloaded
@@ -184,6 +210,8 @@ async def fetch_with_playwright(url: str) -> str | None:
                 await page.wait_for_timeout(3000)
                 text = await page.inner_text("body")
                 await browser.close()
+                if text:
+                    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
                 return text if text else None
         except Exception as e:
             print(f"Playwright error (domcontentloaded fallback): {e}")
@@ -214,6 +242,8 @@ def clean_text(html: str) -> str:
                      "aside", "form", "iframe", "img", "svg", "button", "input"]):
         tag.decompose()
     text = soup.get_text(separator="\n", strip=True)
+    # Strip null bytes and other non-printable control characters
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     return "\n".join(lines)
 
@@ -308,12 +338,14 @@ async def scrape(url: str) -> dict:
                     current_url = refresh_target
                     visited.add(current_url)
 
-        # Detect JS-rendered pages on the first fetch
+        # Detect JS-rendered pages or encoding failures on the first fetch
         if current_url == url:
             text_preview = clean_text(raw) if raw else ""
             print(f"Initial fetch text length: {len(text_preview)}")
-            if len(text_preview) < JS_RENDER_THRESHOLD:
+            if len(text_preview) < JS_RENDER_THRESHOLD or is_garbled(text_preview):
                 needs_js_render = True
+                if is_garbled(text_preview):
+                    print("Content appears garbled — falling back to Playwright")
 
         if needs_js_render and PLAYWRIGHT_AVAILABLE:
             # Use headless browser for this site
@@ -353,6 +385,13 @@ async def scrape(url: str) -> dict:
 
         title = get_page_title(raw)
         text = clean_text(raw)
+
+        # If static fetch returned garbage, try Playwright before giving up
+        if is_garbled(text) and PLAYWRIGHT_AVAILABLE:
+            print(f"Garbled content detected for {current_url} — retrying with Playwright")
+            pw_text = await fetch_with_playwright(current_url)
+            if pw_text:
+                text = clean_playwright_text(pw_text)
 
         if len(text) > 50:
             pages.append({"url": current_url, "title": title, "text": text[:8000]})
