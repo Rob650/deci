@@ -1070,11 +1070,12 @@
     loadingEl.style.display = "block";
     analyzeBtn.disabled = true;
     analyzeBtn.textContent = "ANALYZING…";
-    startSteps();
+    // Reset all steps; first step becomes active once polling starts
+    stepEls.forEach(s => { s.className = "step"; });
+    stepEls[0].classList.add("active");
   }
 
   function hideLoading() {
-    clearSteps();
     loadingEl.style.display = "none";
     analyzeBtn.disabled = false;
     analyzeBtn.textContent = "ANALYZE";
@@ -1244,6 +1245,30 @@
     resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  const STEP_LABELS = {
+    scraping:           "Scraping website...",
+    collecting_sources: "Collecting data sources...",
+    analyzing:          "Running AI analysis...",
+    saving:             "Saving results...",
+  };
+
+  // Map backend step names to the step element indices for highlighting
+  const STEP_INDEX = {
+    scraping:           0,
+    collecting_sources: 1,
+    analyzing:          6,
+    saving:             6,
+  };
+
+  function setActiveStep(step) {
+    const idx = STEP_INDEX[step] ?? 0;
+    stepEls.forEach((s, i) => {
+      s.classList.remove("active", "done");
+      if (i < idx) s.classList.add("done");
+      else if (i === idx) s.classList.add("active");
+    });
+  }
+
   async function runAnalysis(prefillUrl) {
     const url = prefillUrl || urlInput.value.trim();
     if (!url) { urlInput.focus(); return; }
@@ -1254,38 +1279,62 @@
     showLoading();
     downloadBtn.style.display = "none";
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    let jobId = null;
+    let pollTimer = null;
+
+    function stopPolling() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
 
     try {
       const resp = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
       const data = await resp.json();
-      hideLoading();
 
       if (!resp.ok) {
+        hideLoading();
         showError(data.detail || "An error occurred. Please try again.");
         return;
       }
 
-      renderResults(data);
-
-      // Refresh library cache in background
-      loadLibraryData();
+      jobId = data.job_id;
     } catch (err) {
-      clearTimeout(timeoutId);
       hideLoading();
-      if (err.name === "AbortError") {
-        showError("Request timed out — the analysis is taking longer than expected. Try a simpler URL.");
-      } else {
-        showError("Network error — could not reach the server. Please try again.");
+      showError("Network error — could not reach the server. Please try again.");
+      return;
+    }
+
+    // Poll for job status
+    async function poll() {
+      try {
+        const resp = await fetch(`/api/job/${jobId}`);
+        const data = await resp.json();
+
+        if (data.status === "running") {
+          if (data.step) setActiveStep(data.step);
+          return; // keep polling
+        }
+
+        stopPolling();
+        hideLoading();
+
+        if (data.status === "complete") {
+          renderResults(data.result);
+          loadLibraryData();
+        } else {
+          showError(data.detail || "An error occurred. Please try again.");
+        }
+      } catch (err) {
+        // Network hiccup — keep polling silently
       }
     }
+
+    pollTimer = setInterval(poll, 3000);
+    // Run first poll immediately after a short delay
+    setTimeout(poll, 1000);
   }
 
   analyzeBtn.addEventListener("click", () => runAnalysis());
