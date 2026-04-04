@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
@@ -141,13 +142,16 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
 
 def fetch_with_playwright(url: str) -> str | None:
     """Render the page in a headless browser and return its visible text."""
+    print(f"PLAYWRIGHT_AVAILABLE: {PLAYWRIGHT_AVAILABLE}")
     if not PLAYWRIGHT_AVAILABLE:
         return None
+    print(f"Attempting Playwright fetch for: {url}")
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+                executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
             )
             page = browser.new_page(
                 user_agent=HEADERS["User-Agent"],
@@ -167,7 +171,8 @@ def fetch_with_playwright(url: str) -> str | None:
             with sync_playwright() as p:
                 browser = p.chromium.launch(
                     headless=True,
-                    args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+                    args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+                    executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
                 )
                 page = browser.new_page(user_agent=HEADERS["User-Agent"])
                 page.goto(url, wait_until="domcontentloaded", timeout=20000)
@@ -175,9 +180,11 @@ def fetch_with_playwright(url: str) -> str | None:
                 text = page.inner_text("body")
                 browser.close()
                 return text if text else None
-        except Exception:
+        except Exception as e:
+            print(f"Playwright error (domcontentloaded fallback): {e}")
             return None
-    except Exception:
+    except Exception as e:
+        print(f"Playwright error: {e}")
         return None
 
 
@@ -299,11 +306,13 @@ def scrape(url: str) -> dict:
         # Detect JS-rendered pages on the first fetch
         if current_url == url:
             text_preview = clean_text(raw) if raw else ""
+            print(f"Initial fetch text length: {len(text_preview)}")
             if len(text_preview) < JS_RENDER_THRESHOLD:
                 needs_js_render = True
 
         if needs_js_render and PLAYWRIGHT_AVAILABLE:
             # Use headless browser for this site
+            print(f"Using Playwright fallback for: {current_url}")
             pw_text = fetch_with_playwright(current_url)
             if pw_text:
                 text = clean_playwright_text(pw_text)
