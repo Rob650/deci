@@ -11,6 +11,7 @@
     :root {
       --bg:        #0a0c0f;
       --surface:   #111418;
+      --surface2:  #16191f;
       --border:    #1e2329;
       --border-hi: #2d3540;
       --accent:    #00d4ff;
@@ -18,6 +19,10 @@
       --green:     #00e676;
       --red:       #ff4444;
       --yellow:    #ffc107;
+      --purple:    #a855f7;
+      --orange:    #f97316;
+      --teal:      #14b8a6;
+      --gold:      #eab308;
       --text:      #e8eaed;
       --text-muted:#6b7280;
       --text-dim:  #9ca3af;
@@ -35,45 +40,74 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Layout ── */
     .wrapper {
-      max-width: 860px;
+      max-width: 960px;
       margin: 0 auto;
       padding: 0 20px 60px;
     }
 
     /* ── Header ── */
     header {
-      padding: 48px 0 36px;
+      padding: 40px 0 24px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .logo {
-      font-size: 2.6rem;
+      font-size: 2.4rem;
       font-weight: 800;
       letter-spacing: 0.25em;
       color: var(--accent);
       text-shadow: 0 0 32px rgba(0, 212, 255, 0.3);
-      font-variant-numeric: tabular-nums;
     }
 
     .tagline {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--text-muted);
     }
+
+    /* ── Tab Navigation ── */
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 10px 20px 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: color 0.2s, border-color 0.2s;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     /* ── Input Section ── */
     .input-section {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 32px;
+      padding: 24px;
+      margin-bottom: 28px;
     }
 
     .input-row {
@@ -103,7 +137,7 @@
       border: none;
       border-radius: var(--radius);
       font-family: var(--font);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       padding: 12px 28px;
@@ -124,13 +158,13 @@
     }
 
     .spinner {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border: 3px solid var(--border-hi);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin: 0 auto 20px;
+      margin: 0 auto 18px;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -139,27 +173,23 @@
       font-size: 1rem;
       font-weight: 600;
       color: var(--accent);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .loading-sub {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
     .loading-steps {
-      margin-top: 18px;
+      margin-top: 16px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
     }
 
-    .step {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      transition: color 0.4s;
-    }
+    .step { font-size: 0.77rem; color: var(--text-muted); transition: color 0.4s; }
     .step.active { color: var(--accent); }
     .step.done { color: var(--green); }
     .step.done::before { content: "✓ "; }
@@ -181,55 +211,173 @@
 
     .results-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 20px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
+      gap: 16px;
     }
 
-    .results-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+    .results-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .results-name { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+    .results-url { font-size: 0.78rem; color: var(--accent); word-break: break-all; }
+    .results-pages { font-size: 0.74rem; color: var(--text-muted); }
 
-    .results-url {
-      font-size: 0.82rem;
-      color: var(--accent);
-      word-break: break-all;
-    }
+    .results-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
-    .results-pages {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-    }
-
-    .new-analysis-btn {
+    .btn-ghost {
       background: transparent;
       border: 1px solid var(--border-hi);
       border-radius: var(--radius);
       color: var(--text-dim);
       font-family: var(--font);
-      font-size: 0.8rem;
-      padding: 8px 16px;
+      font-size: 0.78rem;
+      padding: 7px 14px;
       cursor: pointer;
       transition: border-color 0.2s, color 0.2s;
       white-space: nowrap;
     }
-    .new-analysis-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+    .btn-ghost:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+    /* ── Scores Overview ── */
+    .scores-overview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .overall-score-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .overall-score-num {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .overall-score-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .score-divider {
+      width: 1px;
+      height: 60px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .score-bars {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px 20px;
+    }
+
+    .score-bar-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-bar-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      width: 70px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .score-bar-track {
+      flex: 1;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .score-bar-value {
+      font-size: 0.72rem;
+      font-weight: 700;
+      width: 16px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── Sector & Tags ── */
+    .meta-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 4px;
+    }
+
+    .badge-sector {
+      background: rgba(0, 212, 255, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    .badge-tag {
+      background: var(--surface);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Summary Block ── */
+    .summary-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-dim);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
 
     /* ── Cards ── */
     .cards-grid {
       display: grid;
-      gap: 16px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px;
+      padding: 20px;
       transition: border-color 0.2s;
     }
     .card:hover { border-color: var(--border-hi); }
@@ -238,22 +386,22 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .card-icon {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 0.9rem;
       flex-shrink: 0;
     }
 
     .card-title {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -261,7 +409,7 @@
     }
 
     .card-body {
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       line-height: 1.75;
       color: var(--text-dim);
       white-space: pre-wrap;
@@ -270,30 +418,358 @@
     /* Card accent colors */
     .card--focus  .card-icon { background: rgba(0, 212, 255, 0.12); }
     .card--team   .card-icon { background: rgba(0, 230, 118, 0.12); }
-    .card--roadmap .card-icon { background: rgba(255, 193, 7, 0.12); }
-    .card--uvp    .card-icon { background: rgba(147, 51, 234, 0.12); }
+    .card--tech   .card-icon { background: rgba(99, 102, 241, 0.12); }
+    .card--token  .card-icon { background: rgba(234, 179, 8, 0.12); }
+    .card--road   .card-icon { background: rgba(249, 115, 22, 0.12); }
+    .card--market .card-icon { background: rgba(168, 85, 247, 0.12); }
     .card--comp   .card-icon { background: rgba(249, 115, 22, 0.12); }
+    .card--comm   .card-icon { background: rgba(20, 184, 166, 0.12); }
+    .card--fund   .card-icon { background: rgba(234, 179, 8, 0.12); }
+    .card--uvp    .card-icon { background: rgba(147, 51, 234, 0.12); }
+    .card--legal  .card-icon { background: rgba(107, 114, 128, 0.12); }
     .card--risk   .card-icon { background: rgba(255, 68, 68, 0.12); }
 
     .card--risk .card-body { color: #e8a09a; }
+
+    /* ── Competitive Intelligence ── */
+    .competitive-card {
+      background: var(--surface);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 14px;
+      grid-column: 1 / -1;
+    }
+
+    .competitive-card .card-header {
+      margin-bottom: 14px;
+    }
+
+    .competitive-card .card-body {
+      white-space: pre-wrap;
+    }
+
+    /* ── Similar Projects ── */
+    .similar-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .similar-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .similar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .similar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      text-decoration: none;
+    }
+    .similar-item:hover { border-color: var(--accent-dim); }
+
+    .similar-score {
+      font-size: 1.1rem;
+      font-weight: 800;
+      width: 28px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .similar-info { flex: 1; min-width: 0; }
+
+    .similar-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .similar-summary {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Library Tab ── */
+    .library-toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .library-search {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      padding: 10px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .library-search::placeholder { color: var(--text-muted); }
+    .library-search:focus { border-color: var(--accent-dim); }
+
+    .compare-btn {
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius);
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .compare-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .compare-btn:not(:disabled):hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+
+    .library-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .library-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .library-empty-text { font-size: 0.9rem; }
+
+    /* ── Project Library Cards ── */
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .lib-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.1s;
+      position: relative;
+    }
+
+    .lib-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+    .lib-card.selected { border-color: var(--accent); background: rgba(0, 212, 255, 0.04); }
+
+    .lib-card-check {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-hi);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--accent);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .lib-card.selected .lib-card-check {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+
+    .lib-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding-right: 28px;
+    }
+
+    .lib-card-score {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .lib-card-meta { flex: 1; min-width: 0; }
+
+    .lib-card-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lib-card-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .lib-card-summary {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .lib-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    /* ── Compare Results ── */
+    #compare-results {
+      display: none;
+      margin-top: 28px;
+    }
+
+    .compare-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-header-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .compare-scores-row {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .compare-project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+
+    .compare-project-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .compare-project-url {
+      font-size: 0.74rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .compare-mini-scores {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+    }
+
+    .compare-mini-score {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+    }
+
+    .compare-mini-score-label { color: var(--text-muted); }
+    .compare-mini-score-val { font-weight: 700; }
+
+    .compare-analysis {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .compare-loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* ── Score color helpers ── */
+    .score-high { color: var(--green); }
+    .score-mid  { color: var(--yellow); }
+    .score-low  { color: var(--red); }
+
+    .fill-high { background: var(--green); }
+    .fill-mid  { background: var(--yellow); }
+    .fill-low  { background: var(--red); }
 
     /* ── Footer ── */
     footer {
       text-align: center;
       padding: 32px 0 0;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
       letter-spacing: 0.08em;
       border-top: 1px solid var(--border);
-      margin-top: 40px;
+      margin-top: 48px;
     }
 
     /* ── Responsive ── */
-    @media (max-width: 600px) {
+    @media (max-width: 700px) {
+      .cards-grid { grid-template-columns: 1fr; }
       .input-row { flex-direction: column; }
       .analyze-btn { width: 100%; }
-      .results-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .results-header { flex-direction: column; align-items: flex-start; gap: 10px; }
       .logo { font-size: 2rem; }
+      .scores-overview { flex-direction: column; align-items: flex-start; }
+      .score-divider { width: 100%; height: 1px; }
     }
   </style>
 </head>
@@ -304,124 +780,217 @@
       <div class="tagline">Project Intelligence</div>
     </header>
 
-    <!-- Input -->
-    <div class="input-section">
-      <div class="input-row">
-        <input
-          type="text"
-          id="url-input"
-          class="url-input"
-          placeholder="https://projectname.io"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button id="analyze-btn" class="analyze-btn">ANALYZE</button>
-      </div>
-    </div>
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="analyze">Analyze</button>
+      <button class="tab-btn" data-tab="library" id="library-tab-btn">Library</button>
+    </nav>
 
-    <!-- Error -->
-    <div id="error-banner"></div>
+    <!-- ── ANALYZE TAB ── -->
+    <div id="tab-analyze" class="tab-content active">
 
-    <!-- Loading -->
-    <div id="loading">
-      <div class="spinner"></div>
-      <div class="loading-title">Analyzing Project</div>
-      <div class="loading-sub">Scraping website and generating intelligence report...</div>
-      <div class="loading-steps">
-        <div class="step" id="step-1">Fetching main page</div>
-        <div class="step" id="step-2">Crawling linked pages</div>
-        <div class="step" id="step-3">Extracting content</div>
-        <div class="step" id="step-4">Running AI analysis</div>
-        <div class="step" id="step-5">Generating report</div>
-      </div>
-    </div>
-
-    <!-- Results -->
-    <div id="results">
-      <div class="results-header">
-        <div class="results-meta">
-          <div class="results-url" id="results-url"></div>
-          <div class="results-pages" id="results-pages"></div>
+      <!-- Input -->
+      <div class="input-section">
+        <div class="input-row">
+          <input
+            type="text"
+            id="url-input"
+            class="url-input"
+            placeholder="https://projectname.io"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="analyze-btn" class="analyze-btn">ANALYZE</button>
         </div>
-        <button class="new-analysis-btn" id="new-analysis-btn">+ New Analysis</button>
       </div>
-      <div class="cards-grid" id="cards-grid"></div>
-    </div>
+
+      <!-- Error -->
+      <div id="error-banner"></div>
+
+      <!-- Loading -->
+      <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-title">Analyzing Project</div>
+        <div class="loading-sub">Scraping website and generating intelligence report...</div>
+        <div class="loading-steps">
+          <div class="step" id="step-1">Fetching main page</div>
+          <div class="step" id="step-2">Crawling linked pages</div>
+          <div class="step" id="step-3">Extracting content</div>
+          <div class="step" id="step-4">Running AI analysis</div>
+          <div class="step" id="step-5">Saving to library</div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="results">
+        <div class="results-header">
+          <div class="results-meta">
+            <div class="results-name" id="results-name"></div>
+            <div class="results-url" id="results-url"></div>
+            <div class="results-pages" id="results-pages"></div>
+          </div>
+          <div class="results-actions">
+            <button class="btn-ghost" id="view-library-btn">View Library</button>
+            <button class="btn-ghost" id="new-analysis-btn">+ New Analysis</button>
+          </div>
+        </div>
+
+        <!-- Sector + Tags -->
+        <div class="meta-badges" id="meta-badges"></div>
+
+        <!-- Summary -->
+        <div class="summary-block" id="summary-block"></div>
+
+        <!-- Scores Overview -->
+        <div class="scores-overview" id="scores-overview">
+          <div class="overall-score-wrap">
+            <div class="overall-score-num" id="overall-score-num">—</div>
+            <div class="overall-score-label">Overall</div>
+          </div>
+          <div class="score-divider"></div>
+          <div class="score-bars" id="score-bars"></div>
+        </div>
+
+        <!-- 12 Category Cards -->
+        <div class="cards-grid" id="cards-grid"></div>
+
+        <!-- Similar Projects -->
+        <div class="similar-section" id="similar-section" style="display:none">
+          <div class="similar-title">Previously Researched — Similar Projects</div>
+          <div class="similar-list" id="similar-list"></div>
+        </div>
+      </div>
+
+    </div><!-- /tab-analyze -->
+
+    <!-- ── LIBRARY TAB ── -->
+    <div id="tab-library" class="tab-content">
+
+      <div class="library-toolbar">
+        <input
+          type="search"
+          id="library-search"
+          class="library-search"
+          placeholder="Search projects by name, sector, tags..."
+        />
+        <button class="compare-btn" id="compare-btn" disabled>
+          Compare Selected (0)
+        </button>
+      </div>
+
+      <div id="library-content">
+        <div class="library-empty" id="library-empty" style="display:none">
+          <div class="library-empty-icon">◎</div>
+          <div class="library-empty-text">No projects researched yet. Analyze a project to build your library.</div>
+        </div>
+        <div class="library-grid" id="library-grid"></div>
+      </div>
+
+      <!-- Compare Results -->
+      <div id="compare-results">
+        <div class="compare-header">
+          <div class="compare-header-title">Comparative Analysis</div>
+          <button class="btn-ghost" id="back-to-library-btn">← Back to Library</button>
+        </div>
+        <div id="compare-scores-row" class="compare-scores-row"></div>
+        <div id="compare-analysis-wrap"></div>
+      </div>
+
+    </div><!-- /tab-library -->
 
     <footer>DECI &mdash; POWERED BY CLAUDE &mdash; FOR RESEARCH PURPOSES ONLY</footer>
   </div>
 
   <script>
+    /* ─────────────────────────────────────────────
+       CONFIG
+    ───────────────────────────────────────────── */
     const CARDS_CONFIG = [
-      {
-        key: "project_focus",
-        title: "Project Focus",
-        icon: "◎",
-        cls: "card--focus",
-      },
-      {
-        key: "team",
-        title: "Team",
-        icon: "◈",
-        cls: "card--team",
-      },
-      {
-        key: "roadmap",
-        title: "Roadmap",
-        icon: "◷",
-        cls: "card--roadmap",
-      },
-      {
-        key: "unique_value_proposition",
-        title: "Unique Value Proposition",
-        icon: "◆",
-        cls: "card--uvp",
-      },
-      {
-        key: "competitors",
-        title: "Competitors",
-        icon: "◉",
-        cls: "card--comp",
-      },
-      {
-        key: "execution_risk",
-        title: "Execution Risk",
-        icon: "⚠",
-        cls: "card--risk",
-      },
+      { key: "project_focus",         title: "Project Focus",            icon: "◎", cls: "card--focus"  },
+      { key: "team",                  title: "Team",                     icon: "◈", cls: "card--team"   },
+      { key: "technology",            title: "Technology",               icon: "⬡", cls: "card--tech"   },
+      { key: "tokenomics",            title: "Tokenomics",               icon: "◈", cls: "card--token"  },
+      { key: "roadmap",               title: "Roadmap",                  icon: "◷", cls: "card--road"   },
+      { key: "market_opportunity",    title: "Market Opportunity",       icon: "◉", cls: "card--market" },
+      { key: "competitors",           title: "Competitors",              icon: "◎", cls: "card--comp"   },
+      { key: "community_ecosystem",   title: "Community & Ecosystem",    icon: "◆", cls: "card--comm"   },
+      { key: "funding_investors",     title: "Funding & Investors",      icon: "◉", cls: "card--fund"   },
+      { key: "unique_value_proposition", title: "Unique Value Prop",     icon: "✦", cls: "card--uvp"    },
+      { key: "regulatory_legal",      title: "Regulatory & Legal",       icon: "⚖", cls: "card--legal"  },
+      { key: "execution_risk",        title: "Execution Risk",           icon: "⚠", cls: "card--risk"   },
     ];
 
-    const urlInput   = document.getElementById("url-input");
-    const analyzeBtn = document.getElementById("analyze-btn");
-    const loading    = document.getElementById("loading");
-    const results    = document.getElementById("results");
-    const errorBanner = document.getElementById("error-banner");
-    const cardsGrid  = document.getElementById("cards-grid");
+    const SCORE_LABELS = [
+      { key: "team",        label: "Team"    },
+      { key: "tech",        label: "Tech"    },
+      { key: "tokenomics",  label: "Tokens"  },
+      { key: "community",   label: "Community" },
+      { key: "execution",   label: "Execution" },
+    ];
+
+    /* ─────────────────────────────────────────────
+       ELEMENT REFS
+    ───────────────────────────────────────────── */
+    const urlInput       = document.getElementById("url-input");
+    const analyzeBtn     = document.getElementById("analyze-btn");
+    const loading        = document.getElementById("loading");
+    const results        = document.getElementById("results");
+    const errorBanner    = document.getElementById("error-banner");
+    const cardsGrid      = document.getElementById("cards-grid");
     const newAnalysisBtn = document.getElementById("new-analysis-btn");
+    const viewLibraryBtn = document.getElementById("view-library-btn");
+    const librarySearch  = document.getElementById("library-search");
+    const compareBtn     = document.getElementById("compare-btn");
+    const libraryGrid    = document.getElementById("library-grid");
+    const libraryEmpty   = document.getElementById("library-empty");
+    const compareResults = document.getElementById("compare-results");
+    const libraryContent = document.getElementById("library-content");
+    const backToLib      = document.getElementById("back-to-library-btn");
 
-    const steps = [
-      document.getElementById("step-1"),
-      document.getElementById("step-2"),
-      document.getElementById("step-3"),
-      document.getElementById("step-4"),
-      document.getElementById("step-5"),
-    ];
+    const steps = Array.from({ length: 5 }, (_, i) =>
+      document.getElementById(`step-${i + 1}`)
+    );
 
-    let stepInterval = null;
+    /* ─────────────────────────────────────────────
+       STATE
+    ───────────────────────────────────────────── */
+    let selectedIds = new Set();
 
+    /* ─────────────────────────────────────────────
+       TABS
+    ───────────────────────────────────────────── */
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(`tab-${tab}`).classList.add("active");
+        if (tab === "library") loadLibrary();
+      });
+    });
+
+    function switchToTab(name) {
+      document.querySelectorAll(".tab-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.tab === name);
+      });
+      document.querySelectorAll(".tab-content").forEach(c => {
+        c.classList.toggle("active", c.id === `tab-${name}`);
+      });
+    }
+
+    /* ─────────────────────────────────────────────
+       LOADING ANIMATION
+    ───────────────────────────────────────────── */
     function startStepAnimation() {
-      let current = 0;
       steps.forEach(s => { s.className = "step"; });
       steps[0].classList.add("active");
-
       const timings = [2000, 6000, 12000, 18000];
       timings.forEach((delay, i) => {
         setTimeout(() => {
           steps[i].classList.remove("active");
           steps[i].classList.add("done");
-          if (i + 1 < steps.length) {
-            steps[i + 1].classList.add("active");
-          }
+          if (i + 1 < steps.length) steps[i + 1].classList.add("active");
         }, delay);
       });
     }
@@ -447,14 +1016,83 @@
       results.style.display = "none";
     }
 
-    function renderResults(data) {
-      document.getElementById("results-url").textContent = data.url;
-      document.getElementById("results-pages").textContent =
-        `${data.pages_scraped} page${data.pages_scraped !== 1 ? "s" : ""} analyzed`;
+    /* ─────────────────────────────────────────────
+       SCORE HELPERS
+    ───────────────────────────────────────────── */
+    function scoreClass(n) {
+      if (n >= 8) return "score-high";
+      if (n >= 5) return "score-mid";
+      return "score-low";
+    }
 
+    function fillClass(n) {
+      if (n >= 8) return "fill-high";
+      if (n >= 5) return "fill-mid";
+      return "fill-low";
+    }
+
+    /* ─────────────────────────────────────────────
+       RENDER RESULTS
+    ───────────────────────────────────────────── */
+    function renderResults(data) {
+      const { report, url, pages_scraped, similar_projects } = data;
+      const scores = report.scores || {};
+      const cats   = report.categories || {};
+      const tags   = report.tags || [];
+
+      // Header
+      document.getElementById("results-name").textContent = report.name || "Unknown Project";
+      document.getElementById("results-url").textContent  = url;
+      document.getElementById("results-pages").textContent =
+        `${pages_scraped} page${pages_scraped !== 1 ? "s" : ""} analyzed`;
+
+      // Sector + tags
+      const badgesEl = document.getElementById("meta-badges");
+      badgesEl.innerHTML = "";
+      if (report.sector) {
+        const b = document.createElement("span");
+        b.className = "badge badge-sector";
+        b.textContent = report.sector;
+        badgesEl.appendChild(b);
+      }
+      tags.forEach(t => {
+        const b = document.createElement("span");
+        b.className = "badge badge-tag";
+        b.textContent = t;
+        badgesEl.appendChild(b);
+      });
+
+      // Summary
+      const summaryEl = document.getElementById("summary-block");
+      summaryEl.textContent = report.summary || "";
+      summaryEl.style.display = report.summary ? "block" : "none";
+
+      // Overall score
+      const overall = scores.overall || 0;
+      const numEl = document.getElementById("overall-score-num");
+      numEl.textContent = overall;
+      numEl.className = `overall-score-num ${scoreClass(overall)}`;
+
+      // Score bars
+      const barsEl = document.getElementById("score-bars");
+      barsEl.innerHTML = "";
+      SCORE_LABELS.forEach(({ key, label }) => {
+        const val = scores[key] || 0;
+        const pct = (val / 10) * 100;
+        barsEl.innerHTML += `
+          <div class="score-bar-item">
+            <span class="score-bar-label">${label}</span>
+            <div class="score-bar-track">
+              <div class="score-bar-fill ${fillClass(val)}" style="width:${pct}%"></div>
+            </div>
+            <span class="score-bar-value ${scoreClass(val)}">${val}</span>
+          </div>`;
+      });
+
+      // 12 category cards
       cardsGrid.innerHTML = "";
       CARDS_CONFIG.forEach(cfg => {
-        const text = data.report[cfg.key] || "Not available.";
+        const text = cats[cfg.key] || "Not available.";
         const card = document.createElement("div");
         card.className = `card ${cfg.cls}`;
         card.innerHTML = `
@@ -462,29 +1100,56 @@
             <div class="card-icon">${cfg.icon}</div>
             <div class="card-title">${cfg.title}</div>
           </div>
-          <div class="card-body">${escapeHtml(text)}</div>
-        `;
+          <div class="card-body">${escapeHtml(text)}</div>`;
         cardsGrid.appendChild(card);
       });
+
+      // Competitive intelligence
+      if (report.competitive_intelligence) {
+        const ci = document.createElement("div");
+        ci.className = "competitive-card";
+        ci.innerHTML = `
+          <div class="card-header">
+            <div class="card-icon" style="background:rgba(0,212,255,0.12)">⚑</div>
+            <div class="card-title">Competitive Intelligence</div>
+          </div>
+          <div class="card-body">${escapeHtml(report.competitive_intelligence)}</div>`;
+        cardsGrid.appendChild(ci);
+      }
+
+      // Similar projects
+      const simSection = document.getElementById("similar-section");
+      const simList    = document.getElementById("similar-list");
+      simList.innerHTML = "";
+      if (similar_projects && similar_projects.length > 0) {
+        similar_projects.forEach(p => {
+          const sc = p.overall_score || 0;
+          const item = document.createElement("div");
+          item.className = "similar-item";
+          item.innerHTML = `
+            <span class="similar-score ${scoreClass(sc)}">${sc}</span>
+            <div class="similar-info">
+              <div class="similar-name">${escapeHtml(p.name || "Unknown")}</div>
+              <div class="similar-summary">${escapeHtml(p.summary || "")}</div>
+            </div>
+            <span class="badge badge-sector">${escapeHtml(p.sector || "")}</span>`;
+          simList.appendChild(item);
+        });
+        simSection.style.display = "block";
+      } else {
+        simSection.style.display = "none";
+      }
 
       results.style.display = "block";
       results.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
+    /* ─────────────────────────────────────────────
+       ANALYZE
+    ───────────────────────────────────────────── */
     async function runAnalysis() {
       const url = urlInput.value.trim();
-      if (!url) {
-        urlInput.focus();
-        return;
-      }
+      if (!url) { urlInput.focus(); return; }
 
       showLoading();
 
@@ -496,7 +1161,6 @@
         });
 
         const data = await resp.json();
-
         hideLoading();
 
         if (!resp.ok) {
@@ -513,10 +1177,7 @@
     }
 
     analyzeBtn.addEventListener("click", runAnalysis);
-
-    urlInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") runAnalysis();
-    });
+    urlInput.addEventListener("keydown", e => { if (e.key === "Enter") runAnalysis(); });
 
     newAnalysisBtn.addEventListener("click", () => {
       results.style.display = "none";
@@ -525,6 +1186,186 @@
       urlInput.focus();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
+
+    viewLibraryBtn.addEventListener("click", () => {
+      switchToTab("library");
+      loadLibrary();
+    });
+
+    /* ─────────────────────────────────────────────
+       LIBRARY
+    ───────────────────────────────────────────── */
+    async function loadLibrary(query) {
+      const endpoint = query
+        ? `/api/projects?q=${encodeURIComponent(query)}`
+        : "/api/projects";
+
+      try {
+        const resp = await fetch(endpoint);
+        if (!resp.ok) return;
+        const projects = await resp.json();
+        renderLibrary(projects);
+      } catch (e) {
+        // silently fail — library is optional feature
+      }
+    }
+
+    function renderLibrary(projects) {
+      libraryGrid.innerHTML = "";
+
+      if (!projects || projects.length === 0) {
+        libraryEmpty.style.display = "block";
+        libraryGrid.style.display = "none";
+        return;
+      }
+
+      libraryEmpty.style.display = "none";
+      libraryGrid.style.display = "grid";
+
+      projects.forEach(p => {
+        const sc = (p.scores && p.scores.overall) || 0;
+        const card = document.createElement("div");
+        card.className = `lib-card${selectedIds.has(p.id) ? " selected" : ""}`;
+        card.dataset.id = p.id;
+
+        const date = p.analyzed_at
+          ? new Date(p.analyzed_at + "Z").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+          : "";
+
+        const tags = (p.tags_list || []).slice(0, 3).map(t =>
+          `<span class="badge badge-tag">${escapeHtml(t)}</span>`
+        ).join("");
+
+        card.innerHTML = `
+          <div class="lib-card-check">${selectedIds.has(p.id) ? "✓" : ""}</div>
+          <div class="lib-card-header">
+            <div class="lib-card-score ${scoreClass(sc)}">${sc}</div>
+            <div class="lib-card-meta">
+              <div class="lib-card-name">${escapeHtml(p.name || "Unknown")}</div>
+              <div class="lib-card-date">${date}</div>
+            </div>
+          </div>
+          ${p.sector ? `<div style="margin-bottom:8px"><span class="badge badge-sector">${escapeHtml(p.sector)}</span></div>` : ""}
+          <div class="lib-card-summary">${escapeHtml(p.summary || "")}</div>
+          <div class="lib-card-tags">${tags}</div>`;
+
+        card.addEventListener("click", () => toggleSelect(p.id, card));
+        libraryGrid.appendChild(card);
+      });
+    }
+
+    function toggleSelect(id, cardEl) {
+      if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+        cardEl.classList.remove("selected");
+        cardEl.querySelector(".lib-card-check").textContent = "";
+      } else {
+        selectedIds.add(id);
+        cardEl.classList.add("selected");
+        cardEl.querySelector(".lib-card-check").textContent = "✓";
+      }
+      updateCompareBtn();
+    }
+
+    function updateCompareBtn() {
+      const n = selectedIds.size;
+      compareBtn.disabled = n < 2;
+      compareBtn.textContent = n >= 2
+        ? `Compare Selected (${n})`
+        : `Compare Selected (${n})`;
+    }
+
+    compareBtn.addEventListener("click", async () => {
+      if (selectedIds.size < 2) return;
+
+      libraryContent.style.display = "none";
+      compareResults.style.display = "block";
+
+      document.getElementById("compare-scores-row").innerHTML = "";
+      document.getElementById("compare-analysis-wrap").innerHTML = `
+        <div class="compare-loading">
+          <div class="spinner" style="margin:0 auto 12px"></div>
+          Generating comparison with Claude...
+        </div>`;
+
+      try {
+        const resp = await fetch("/api/compare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_ids: Array.from(selectedIds) }),
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          document.getElementById("compare-analysis-wrap").innerHTML =
+            `<div class="compare-loading" style="color:var(--red)">${escapeHtml(data.detail || "Comparison failed.")}</div>`;
+          return;
+        }
+
+        renderComparison(data);
+
+      } catch (e) {
+        document.getElementById("compare-analysis-wrap").innerHTML =
+          `<div class="compare-loading" style="color:var(--red)">Network error.</div>`;
+      }
+    });
+
+    function renderComparison(data) {
+      const { projects, analysis } = data;
+      const scoreRowEl = document.getElementById("compare-scores-row");
+      scoreRowEl.style.gridTemplateColumns = `repeat(${projects.length}, 1fr)`;
+
+      scoreRowEl.innerHTML = projects.map(p => {
+        const sc = (p.scores && p.scores.overall) || 0;
+        const miniScores = ["team", "tech", "tokenomics", "community", "execution"].map(k => {
+          const v = (p.scores && p.scores[k]) || 0;
+          return `<div class="compare-mini-score">
+            <span class="compare-mini-score-label">${k}</span>
+            <span class="compare-mini-score-val ${scoreClass(v)}">${v}</span>
+          </div>`;
+        }).join("");
+
+        return `
+          <div class="compare-project-card">
+            <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+              <span style="font-size:2rem;font-weight:800;" class="${scoreClass(sc)}">${sc}</span>
+              <div>
+                <div class="compare-project-name">${escapeHtml(p.name || "Unknown")}</div>
+                <div class="compare-project-url">${escapeHtml(p.url || "")}</div>
+              </div>
+            </div>
+            <div class="compare-mini-scores">${miniScores}</div>
+          </div>`;
+      }).join("");
+
+      document.getElementById("compare-analysis-wrap").innerHTML =
+        `<div class="compare-analysis">${escapeHtml(analysis || "No analysis generated.")}</div>`;
+    }
+
+    backToLib.addEventListener("click", () => {
+      compareResults.style.display = "none";
+      libraryContent.style.display = "block";
+    });
+
+    // Library search with debounce
+    let searchTimeout;
+    librarySearch.addEventListener("input", () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => loadLibrary(librarySearch.value.trim()), 300);
+    });
+
+    /* ─────────────────────────────────────────────
+       UTILS
+    ───────────────────────────────────────────── */
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
   </script>
 </body>
 </html>
