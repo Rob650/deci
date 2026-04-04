@@ -27,7 +27,7 @@ HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
@@ -59,6 +59,16 @@ CRAWL_DELAY = 0.5
 MAX_RETRIES = 3
 # Threshold below which we treat the page as JS-rendered and fall back to Playwright
 JS_RENDER_THRESHOLD = 100
+
+
+def is_garbled(text: str) -> bool:
+    """Return True if the text looks like compressed/binary garbage (e.g. un-decoded brotli)."""
+    if not text or len(text) < 20:
+        return False
+    sample = text[:2000]
+    non_printable = sum(1 for c in sample if ord(c) > 127 or (ord(c) < 32 and c not in "\n\r\t"))
+    ratio = non_printable / len(sample)
+    return ratio > 0.1
 
 
 def is_same_domain(url: str, base: str) -> bool:
@@ -303,12 +313,17 @@ def scrape(url: str) -> dict:
                     current_url = refresh_target
                     visited.add(current_url)
 
-        # Detect JS-rendered pages on the first fetch
+        # Detect JS-rendered or garbled pages on the first fetch
         if current_url == url:
-            text_preview = clean_text(raw) if raw else ""
-            print(f"Initial fetch text length: {len(text_preview)}")
-            if len(text_preview) < JS_RENDER_THRESHOLD:
+            if raw and is_garbled(raw):
+                print(f"Garbled/compressed response detected for: {current_url} — going straight to Playwright")
                 needs_js_render = True
+                raw = None  # discard garbage; Playwright will handle it
+            else:
+                text_preview = clean_text(raw) if raw else ""
+                print(f"Initial fetch text length: {len(text_preview)}")
+                if len(text_preview) < JS_RENDER_THRESHOLD:
+                    needs_js_render = True
 
         if needs_js_render and PLAYWRIGHT_AVAILABLE:
             # Use headless browser for this site
