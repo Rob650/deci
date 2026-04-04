@@ -28,7 +28,7 @@ HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
@@ -75,15 +75,21 @@ def _decode_response(resp: requests.Response) -> str:
     return resp.content.decode("utf-8", errors="replace")
 
 
-def is_garbled(text: str, threshold: float = 0.30) -> bool:
-    """Return True if more than `threshold` fraction of chars are non-printable / garbage."""
+def is_garbled(text: str, threshold: float = 0.10) -> bool:
+    """Return True if the text looks like compressed/binary garbage.
+
+    Checks both low control chars AND high bytes (>127) so brotli-compressed
+    responses that requests can't decompress are caught, not just encoding issues.
+    Uses a small sample to keep this fast.
+    """
     if not text:
         return True
+    sample = text[:2000]
     non_printable = sum(
-        1 for ch in text
-        if ord(ch) < 32 and ch not in ("\n", "\r", "\t")
+        1 for ch in sample
+        if ord(ch) > 127 or (ord(ch) < 32 and ch not in ("\n", "\r", "\t"))
     )
-    return (non_printable / len(text)) > threshold
+    return (non_printable / len(sample)) > threshold
 
 
 def is_same_domain(url: str, base: str) -> bool:
@@ -340,12 +346,18 @@ async def scrape(url: str) -> dict:
 
         # Detect JS-rendered pages or encoding failures on the first fetch
         if current_url == url:
-            text_preview = clean_text(raw) if raw else ""
-            print(f"Initial fetch text length: {len(text_preview)}")
-            if len(text_preview) < JS_RENDER_THRESHOLD or is_garbled(text_preview):
+            # Check raw bytes first — brotli garbage is visible before clean_text strips it
+            if raw and is_garbled(raw):
+                print(f"Garbled/compressed response detected for: {current_url} — going straight to Playwright")
                 needs_js_render = True
-                if is_garbled(text_preview):
-                    print("Content appears garbled — falling back to Playwright")
+                raw = None  # discard garbage so Playwright result isn't mixed with it
+            else:
+                text_preview = clean_text(raw) if raw else ""
+                print(f"Initial fetch text length: {len(text_preview)}")
+                if len(text_preview) < JS_RENDER_THRESHOLD or is_garbled(text_preview):
+                    needs_js_render = True
+                    if is_garbled(text_preview):
+                        print("Content appears garbled — falling back to Playwright")
 
         if needs_js_render and PLAYWRIGHT_AVAILABLE:
             # Use headless browser for this site
