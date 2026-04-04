@@ -939,7 +939,7 @@
     <!-- Project grid -->
     <div class="lib-grid" id="lib-grid"></div>
 
-    <div id="lib-empty" style="display:none">
+    <div id="lib-empty">
       <strong>No projects yet</strong>
       Analyze a project to save it to your library.
     </div>
@@ -1210,7 +1210,22 @@
 
     cardsGrid.innerHTML = "";
     CARDS.forEach(cfg => {
-      const text = data.report[cfg.key] || "Not available.";
+      const raw = data.report[cfg.key];
+      let text;
+      if (raw === null || raw === undefined || raw === "") {
+        text = "Not available.";
+      } else if (typeof raw === "string") {
+        text = raw || "Not available.";
+      } else if (typeof raw === "object" && !Array.isArray(raw)) {
+        // Flatten a nested object Claude returned instead of a string
+        text = Object.entries(raw)
+          .map(([k, v]) => `• ${k.replace(/_/g, " ")}: ${v}`)
+          .join("\n");
+      } else if (Array.isArray(raw)) {
+        text = raw.map(item => `• ${item}`).join("\n");
+      } else {
+        text = String(raw);
+      }
       const card = document.createElement("div");
       card.className = `card ${cfg.cls}`;
       card.innerHTML = `
@@ -1294,11 +1309,14 @@
   async function loadLibraryData() {
     try {
       const resp = await fetch("/api/projects");
-      allProjects = await resp.json();
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      allProjects = Array.isArray(data) ? data : [];
+    } catch (e) {
+      // Keep existing allProjects on error (don't wipe it)
+    } finally {
       rebuildSectorFilters();
       renderLibrary();
-    } catch (e) {
-      // silently fail on background refresh
     }
   }
 

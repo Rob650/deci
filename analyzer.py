@@ -11,7 +11,13 @@ SYSTEM_PROMPT = """You are Deci, an elite crypto and technology project intellig
 You produce structured, honest, and deeply researched reports on blockchain, crypto, and tech projects.
 You synthesize data from multiple sources: the project website, GitHub repo stats, CoinGecko token data, DeFiLlama TVL data, and recent news/social mentions.
 You are direct, specific, and highlight both strengths and risks without hype.
-When sources are missing or unavailable, note this and treat it as potentially relevant to the risk assessment."""
+When sources are missing or unavailable, note this explicitly and treat it as relevant to the risk assessment.
+
+CRITICAL OUTPUT RULES:
+1. Every field in your JSON response MUST be a plain string (not a nested object, not an array, not null).
+2. Use bullet points (•) and newline characters within strings to structure multi-part content.
+3. Always cite specific numbers, names, and dates from the provided data — never use vague estimates.
+4. If a specific data point is unavailable, say "Not found in available data" rather than omitting it or guessing."""
 
 ANALYSIS_PROMPT = """Analyze this project using all provided data sources and produce a comprehensive intelligence report.
 
@@ -23,30 +29,30 @@ ANALYSIS_PROMPT = """Analyze this project using all provided data sources and pr
 
 ---
 
-Produce a JSON report with EXACTLY these keys. Be thorough, specific, and honest.
+Produce a JSON report with EXACTLY these keys. ALL values must be plain strings — no nested objects.
 
 {{
-  "executive_summary": "2-3 sentences: what is this project, what stage is it at, and the single most important insight an investor or analyst should know.",
+  "executive_summary": "3-4 sentences. Include: (1) what this project is and what problem it solves, (2) current stage (mainnet/testnet/pre-launch), (3) one key metric (TVL, market cap, GitHub stars, or user count), and (4) the single most critical insight — positive or negative — that an investor must know. Be specific, no fluff.",
 
-  "project_focus": "What it does, what problem it solves, the technology stack, any genuine technical innovation. 3-5 sentences. Quote specific claims from the website where relevant.",
+  "project_focus": "Technical deep-dive covering ALL of the following you can determine from the data:\\n• Layer: L1 / L2 / L3 / application / infrastructure\\n• Consensus mechanism (PoS, PoW, PoA, DPoS, etc.) if applicable\\n• VM / execution environment (EVM-compatible, custom VM, WASM, etc.)\\n• Smart contract language (Solidity, Rust, Move, Cairo, etc.)\\n• Key protocol design choices (rollup type, data availability, sequencer model, etc.)\\n• Specific use cases with named examples (e.g. 'enables Uniswap-style AMM for X asset class')\\n• Claimed performance metrics (TPS, finality time, gas costs) — quote directly from website\\n• What is genuinely novel vs. what is copied from existing solutions",
 
-  "team": "Who is behind the project — names, roles, backgrounds, relevant experience. Note any advisors or investors mentioned. If team info is thin or anonymous, flag this explicitly.",
+  "team": "For each team member you can identify:\\n• [Name] — [Title] — [Previous companies/projects with years] — [Education if stated] — [LinkedIn/Twitter if mentioned]\\nNote advisors and institutional backers with the same detail.\\nFlag any of these red flags if present: anonymous founders, LinkedIn profiles that don't check out, team members with failed/exit-scam history, advisors who are purely decorative, no verifiable track record.\\nIf team info is completely absent, state: 'Team is anonymous or undisclosed — HIGH risk flag.'",
 
-  "tokenomics": "Token supply (total, circulating, max), distribution breakdown, vesting schedules, token utility, inflation rate. Use CoinGecko data if available. Assess whether tokenomics are investor-friendly or concerning.",
+  "tokenomics": "Use CoinGecko data if available. Cover ALL of the following:\\n• Token ticker and network\\n• Total supply: [exact number]\\n• Circulating supply: [exact number] ([X]% of total)\\n• Max supply: [exact number or 'unlimited']\\n• Current price: [price] | Market cap: [amount] | FDV: [amount] | 24h volume: [amount]\\n• ATH: [price] — currently [X]% below ATH\\n• Distribution breakdown: Team [X]% (vesting: [schedule]), Investors [X]% (vesting: [schedule]), Community/Ecosystem [X]%, Foundation [X]%, Public sale [X]%\\n• Token utility: governance / fee payment / staking / burning / collateral — describe each mechanism\\n• Inflation rate or emission schedule\\n• Assessment: are tokenomics investor-friendly or concerning? Give specific reasoning.",
 
-  "roadmap": "Past delivery track record (what was promised vs. delivered) and upcoming milestones with specific dates/quarters if mentioned. Assess whether the team has a history of on-time delivery.",
+  "roadmap": "List every milestone you can find from website/news, with status:\\n• [Q/Year] [Milestone name]: [DELIVERED ✓ / IN PROGRESS / UPCOMING / DELAYED ✗]\\nFor delivered items: note if it was on time or late.\\nFor upcoming: note the target date.\\nConclusion: assess the team's delivery track record — what % of promised milestones have been delivered on time? Are there patterns of delays?",
 
-  "unique_value_proposition": "What genuinely differentiates this from alternatives. Quote their specific claims, then critically assess each one. Avoid generic praise like 'innovative' or 'revolutionary'.",
+  "unique_value_proposition": "Quote their top 3-5 marketing claims verbatim (in quotes), then critically assess each:\\n• Claim: '[exact quote from website]'\\n  Reality: [your assessment — is this real differentiation or marketing language? Compare to alternatives.]\\nConclusion: what genuinely sets this project apart, if anything? Name the specific technical or business moat.",
 
-  "competitive_landscape": "Name the actual direct competitors. Compare this project's positioning. Who is winning in this space and why? Be specific about advantages and disadvantages.",
+  "competitive_landscape": "Name at least 4 direct competitors. For each:\\n• [Competitor Name] — Market cap: [amount if known] — TVL: [amount if known] — Key advantage over [this project]: [specific reason] — Key weakness vs [this project]: [specific reason]\\nOverall positioning: where does this project sit in the competitive matrix? Is it a market leader, fast-follower, or niche player? Who is currently winning this market and why?\\nIf no direct competitors exist (genuinely novel), explain why this market might be too small or too early.",
 
-  "community_social": "Quantify the community: Twitter/X followers (from CoinGecko if available), GitHub stars/forks/contributors/commit frequency, Discord/Telegram size if mentioned. Assess engagement quality.",
+  "community_social": "Exact numbers from CoinGecko and GitHub data provided:\\n• Twitter/X followers: [exact number from CoinGecko data, or 'not found']\\n• Reddit subscribers: [exact number or 'not found']\\n• GitHub stars: [number] | Forks: [number] | Contributors: [number] | Last push: [date]\\n• GitHub commit activity: [daily/weekly/monthly — assess from last push and creation date]\\n• Discord/Telegram: [size if mentioned anywhere, or 'not found in data']\\n• Community growth trend: [growing rapidly / steady / stagnant / declining] — based on what evidence?\\n• Engagement quality: [genuine technical discussion / mostly speculation / bot activity suspected]",
 
-  "on_chain_metrics": "TVL from DeFiLlama (if available), trading volume, active addresses, protocol revenue, chain deployments. If no on-chain data is available, state this clearly and explain implications.",
+  "on_chain_metrics": "From DeFiLlama and CoinGecko data:\\n• TVL: [exact amount] ([X]% change 1d, [X]% change 7d) — as of [date if available]\\n• Chains deployed on: [list]\\n• MCap/TVL ratio: [number — <1 is often undervalued, >3 is often overvalued]\\n• Protocol category (DeFiLlama): [category]\\n• 24h trading volume: [amount]\\n• Protocol revenue: [if available]\\n• Notable whale activity or concentration: [if mentioned]\\nIf no on-chain data is available: state this explicitly and assess what it implies — e.g. pre-launch, no DeFi component, or data gap.",
 
-  "recent_events": "CRITICAL — List the most recent significant developments in bullet format. Pull from the news search results and Twitter mentions provided. Include: product launches, partnerships, funding rounds, exchange listings, community milestones, or notable announcements. Format as bullet list with approximate date/source where available. If limited data, say so explicitly.",
+  "recent_events": "List 8-12 recent developments from the news and Twitter data. Each item:\\n• [Approx date or 'Recent'] — [Source] — [Specific event with named entities]\\nInclude: funding rounds (name the lead investor and amount), exchange listings (name the exchange), partnerships (name both parties), product launches (name the feature), governance votes (outcome and vote count), security incidents (nature and resolution).\\nIf news data is sparse: note this explicitly — limited news coverage can indicate low awareness or pre-launch stage.",
 
-  "risk_assessment": "Structured risk breakdown:\\n• Team Risk: [assessment]\\n• Technical Risk: [assessment]\\n• Tokenomics Risk: [assessment]\\n• Market/Competition Risk: [assessment]\\n• Regulatory Risk: [assessment]\\n• Execution Risk: [assessment]\\n\\nOverall Risk Rating: LOW / MEDIUM / HIGH / VERY HIGH",
+  "risk_assessment": "Provide a structured assessment. Each risk must cite SPECIFIC evidence from the data:\\n\\n• Team Risk: [LOW/MEDIUM/HIGH] — [evidence: named team members and their track records, or lack thereof]\\n• Technical Risk: [LOW/MEDIUM/HIGH] — [evidence: smart contract audit status (auditor name and date if available), centralization vectors (multisig, upgradeable contracts, single sequencer), oracle dependencies, open-source status]\\n• Tokenomics Risk: [LOW/MEDIUM/HIGH] — [evidence: upcoming token unlocks with dates, supply concentration, inflation rate vs. demand drivers]\\n• Market/Competition Risk: [LOW/MEDIUM/HIGH] — [evidence: named competitors and their traction vs. this project]\\n• Regulatory Risk: [LOW/MEDIUM/HIGH] — [evidence: token classification risk, geographic restrictions, compliance disclosures]\\n• Execution Risk: [LOW/MEDIUM/HIGH] — [evidence: delivery track record, current development stage, team size vs. scope]\\n\\nOverall Risk Rating: [LOW / MEDIUM / HIGH / VERY HIGH]\\nJustification: [2 sentences explaining the overall rating based on the most critical risks above]",
 
   "sector": "ONE of: AI, DeFi, Gaming, Meme, L1/L2, NFT, Infrastructure, Social, RWA, Privacy, Oracle, DEX, Lending, Payments, Other",
 
@@ -58,16 +64,21 @@ Produce a JSON report with EXACTLY these keys. Be thorough, specific, and honest
     "tokenomics": <integer 1-10>,
     "community": <integer 1-10>,
     "execution": <integer 1-10>,
-    "overall": <float rounded to 1 decimal, formula: team*0.25 + technology*0.25 + tokenomics*0.20 + community*0.15 + execution*0.15>
+    "overall": <float rounded to 1 decimal, formula: team*0.25 + technology*0.25 + tokenomics*0.20 + community*0.15 + execution*0.15>,
+    "team_rationale": "2-3 specific reasons for this score (cite names, facts, red flags)",
+    "technology_rationale": "2-3 specific reasons for this score (cite tech stack, audits, innovation level)",
+    "tokenomics_rationale": "2-3 specific reasons for this score (cite supply numbers, vesting, utility)",
+    "community_rationale": "2-3 specific reasons for this score (cite follower counts, GitHub stats)",
+    "execution_rationale": "2-3 specific reasons for this score (cite milestone delivery record, stage)"
   }}
 }}
 
 Scoring rubric (be honest — do not inflate):
-- 9-10: Exceptional. Top-tier team/tech, strong metrics, clear differentiation.
-- 7-8: Strong. Above average with minor concerns.
-- 5-6: Average. Present but unremarkable, or mixed signals.
-- 3-4: Below average. Notable weaknesses or red flags.
-- 1-2: Poor. Major problems, missing critical information, or high risk.
+- 9-10: Exceptional. Top-tier team/tech/metrics, clear differentiation, strong evidence.
+- 7-8: Strong. Above average with minor concerns backed by evidence.
+- 5-6: Average. Present but unremarkable, mixed signals, or data gaps.
+- 3-4: Below average. Notable weaknesses or red flags with specific evidence.
+- 1-2: Poor. Major problems, anonymous team, no traction, or critical data missing.
 
 Return ONLY valid JSON. No markdown fences, no preamble, no trailing text."""
 
@@ -225,7 +236,7 @@ def analyze(scraped_data: dict, sources: dict | None = None) -> dict:
 
     message = client.messages.create(
         model=MODEL,
-        max_tokens=6000,
+        max_tokens=8000,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -246,15 +257,27 @@ def analyze(scraped_data: dict, sources: dict | None = None) -> dict:
         else:
             return _error_report(raw)
 
-    # Ensure all required keys exist
+    # Ensure all required keys exist and are strings (not nested objects)
     required = [
         "executive_summary", "project_focus", "team", "tokenomics", "roadmap",
         "unique_value_proposition", "competitive_landscape", "community_social",
         "on_chain_metrics", "recent_events", "risk_assessment",
     ]
     for k in required:
-        if k not in report:
+        val = report.get(k)
+        if val is None or val == "":
             report[k] = "Not available."
+        elif not isinstance(val, str):
+            # Claude returned a nested object — flatten it to a string
+            if isinstance(val, dict):
+                report[k] = "\n".join(
+                    f"• {str(field).replace('_', ' ').title()}: {str(v)}"
+                    for field, v in val.items()
+                )
+            elif isinstance(val, list):
+                report[k] = "\n".join(f"• {str(item)}" for item in val)
+            else:
+                report[k] = str(val)
 
     # Normalize sector
     valid_sectors = {
