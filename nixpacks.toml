@@ -1,8 +1,35 @@
 [phases.setup]
-nixPkgs = ["python311", "gcc"]
+nixPkgs = [
+  "python311",
+  "gcc",
+  # Chromium dependencies for Playwright
+  "chromium",
+  "nss",
+  "nspr",
+  "atk",
+  "cups",
+  "libdrm",
+  "libxkbcommon",
+  "xorg.libXcomposite",
+  "xorg.libXdamage",
+  "xorg.libXrandr",
+  "xorg.libXtst",
+  "xorg.libxcb",
+  "mesa",
+  "pango",
+  "cairo",
+  "alsa-lib",
+  "at-spi2-atk",
+  "at-spi2-core",
+  "gtk3",
+  "glib",
+]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "pip install -r requirements.txt",
+  "playwright install chromium",
+]
 
 [start]
 cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
