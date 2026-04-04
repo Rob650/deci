@@ -1,4 +1,5 @@
 import os
+import asyncio
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
@@ -14,7 +15,7 @@ except ImportError:
     PDF_SUPPORT = False
 
 try:
-    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+    from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeout
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -27,7 +28,7 @@ HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
@@ -59,6 +60,36 @@ CRAWL_DELAY = 0.5
 MAX_RETRIES = 3
 # Threshold below which we treat the page as JS-rendered and fall back to Playwright
 JS_RENDER_THRESHOLD = 100
+
+
+def _decode_response(resp: requests.Response) -> str:
+    """Decode a response body with proper encoding detection."""
+    # Try chardet-detected encoding first
+    detected = resp.apparent_encoding
+    if detected:
+        try:
+            return resp.content.decode(detected, errors="replace")
+        except (LookupError, UnicodeDecodeError):
+            pass
+    # Fall back to UTF-8 with replacement
+    return resp.content.decode("utf-8", errors="replace")
+
+
+def is_garbled(text: str, threshold: float = 0.10) -> bool:
+    """Return True if the text looks like compressed/binary garbage.
+
+    Checks both low control chars AND high bytes (>127) so brotli-compressed
+    responses that requests can't decompress are caught, not just encoding issues.
+    Uses a small sample to keep this fast.
+    """
+    if not text:
+        return True
+    sample = text[:2000]
+    non_printable = sum(
+        1 for ch in sample
+        if ord(ch) > 127 or (ord(ch) < 32 and ch not in ("\n", "\r", "\t"))
+    )
+    return (non_printable / len(sample)) > threshold
 
 
 def is_same_domain(url: str, base: str) -> bool:
@@ -107,7 +138,7 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
                     return extract_pdf_text(resp.content)
                 if "text" not in content_type and "html" not in content_type:
                     return None
-                return resp.text
+                return _decode_response(resp)
             if resp.status_code >= 500:
                 time.sleep(2 ** attempt)
                 continue
@@ -129,7 +160,7 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
                         return extract_pdf_text(resp.content)
                     if "text" not in content_type and "html" not in content_type:
                         return None
-                    return resp.text
+                    return _decode_response(resp)
             except Exception:
                 pass
             break
@@ -140,45 +171,53 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
     return None
 
 
-def fetch_with_playwright(url: str) -> str | None:
+async def fetch_with_playwright(url: str) -> str | None:
     """Render the page in a headless browser and return its visible text."""
     print(f"PLAYWRIGHT_AVAILABLE: {PLAYWRIGHT_AVAILABLE}")
     if not PLAYWRIGHT_AVAILABLE:
         return None
     print(f"Attempting Playwright fetch for: {url}")
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
                 headless=True,
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
                 executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
             )
-            page = browser.new_page(
+            page = await browser.new_page(
                 user_agent=HEADERS["User-Agent"],
                 extra_http_headers={
                     "Accept-Language": "en-US,en;q=0.9",
                 },
             )
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            try:
+                await page.goto(url, wait_until="networkidle", timeout=30000)
+            except PlaywrightTimeout:
+                # If networkidle times out, try domcontentloaded
+                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
             # Give extra time for lazy-loaded content
-            page.wait_for_timeout(2000)
-            text = page.inner_text("body")
-            browser.close()
+            await page.wait_for_timeout(2000)
+            text = await page.inner_text("body")
+            await browser.close()
+            if text:
+                text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
             return text if text else None
     except PlaywrightTimeout:
-        # If networkidle times out, try domcontentloaded
+        # Retry with a fresh browser using domcontentloaded
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(
                     headless=True,
                     args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
                     executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
                 )
-                page = browser.new_page(user_agent=HEADERS["User-Agent"])
-                page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                page.wait_for_timeout(3000)
-                text = page.inner_text("body")
-                browser.close()
+                page = await browser.new_page(user_agent=HEADERS["User-Agent"])
+                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                await page.wait_for_timeout(3000)
+                text = await page.inner_text("body")
+                await browser.close()
+                if text:
+                    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
                 return text if text else None
         except Exception as e:
             print(f"Playwright error (domcontentloaded fallback): {e}")
@@ -209,6 +248,8 @@ def clean_text(html: str) -> str:
                      "aside", "form", "iframe", "img", "svg", "button", "input"]):
         tag.decompose()
     text = soup.get_text(separator="\n", strip=True)
+    # Strip null bytes and other non-printable control characters
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     return "\n".join(lines)
 
@@ -260,7 +301,7 @@ def discover_links(html: str, base_url: str) -> list[tuple[str, str, int]]:
     return results
 
 
-def scrape(url: str) -> dict:
+async def scrape(url: str) -> dict:
     """
     Main entry point. Returns:
     {
@@ -303,17 +344,25 @@ def scrape(url: str) -> dict:
                     current_url = refresh_target
                     visited.add(current_url)
 
-        # Detect JS-rendered pages on the first fetch
+        # Detect JS-rendered pages or encoding failures on the first fetch
         if current_url == url:
-            text_preview = clean_text(raw) if raw else ""
-            print(f"Initial fetch text length: {len(text_preview)}")
-            if len(text_preview) < JS_RENDER_THRESHOLD:
+            # Check raw bytes first — brotli garbage is visible before clean_text strips it
+            if raw and is_garbled(raw):
+                print(f"Garbled/compressed response detected for: {current_url} — going straight to Playwright")
                 needs_js_render = True
+                raw = None  # discard garbage so Playwright result isn't mixed with it
+            else:
+                text_preview = clean_text(raw) if raw else ""
+                print(f"Initial fetch text length: {len(text_preview)}")
+                if len(text_preview) < JS_RENDER_THRESHOLD or is_garbled(text_preview):
+                    needs_js_render = True
+                    if is_garbled(text_preview):
+                        print("Content appears garbled — falling back to Playwright")
 
         if needs_js_render and PLAYWRIGHT_AVAILABLE:
             # Use headless browser for this site
             print(f"Using Playwright fallback for: {current_url}")
-            pw_text = fetch_with_playwright(current_url)
+            pw_text = await fetch_with_playwright(current_url)
             if pw_text:
                 text = clean_playwright_text(pw_text)
                 title = ""
@@ -329,7 +378,7 @@ def scrape(url: str) -> dict:
                         if candidate not in visited:
                             queue.append((candidate, 8))
                     queue.sort(key=lambda x: x[1], reverse=True)
-                time.sleep(CRAWL_DELAY)
+                await asyncio.sleep(CRAWL_DELAY)
                 continue
 
         if not raw:
@@ -343,11 +392,18 @@ def scrape(url: str) -> dict:
 
         if current_url.lower().endswith(".pdf"):
             pages.append({"url": current_url, "title": "PDF Document", "text": raw})
-            time.sleep(CRAWL_DELAY)
+            await asyncio.sleep(CRAWL_DELAY)
             continue
 
         title = get_page_title(raw)
         text = clean_text(raw)
+
+        # If static fetch returned garbage, try Playwright before giving up
+        if is_garbled(text) and PLAYWRIGHT_AVAILABLE:
+            print(f"Garbled content detected for {current_url} — retrying with Playwright")
+            pw_text = await fetch_with_playwright(current_url)
+            if pw_text:
+                text = clean_playwright_text(pw_text)
 
         if len(text) > 50:
             pages.append({"url": current_url, "title": title, "text": text[:8000]})
@@ -370,7 +426,7 @@ def scrape(url: str) -> dict:
                     queue.append((link_url, score))
             queue.sort(key=lambda x: x[1], reverse=True)
 
-        time.sleep(CRAWL_DELAY)
+        await asyncio.sleep(CRAWL_DELAY)
 
     if not pages:
         return {

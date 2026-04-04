@@ -5,28 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DECI — Project Intelligence</title>
   <style>
-    /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0a0c0f;
-      --surface:   #111418;
-      --border:    #1e2329;
-      --border-hi: #2d3540;
-      --accent:    #00d4ff;
-      --accent-dim:#007fa0;
-      --green:     #00e676;
-      --red:       #ff4444;
-      --yellow:    #ffc107;
-      --text:      #e8eaed;
-      --text-muted:#6b7280;
-      --text-dim:  #9ca3af;
-      --radius:    8px;
-      --font:      'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --bg:         #0a0c0f;
+      --surface:    #111418;
+      --surface-hi: #161b22;
+      --border:     #1e2329;
+      --border-hi:  #2d3540;
+      --accent:     #00d4ff;
+      --accent-dim: #007fa0;
+      --green:      #10b981;
+      --amber:      #f59e0b;
+      --orange:     #f97316;
+      --red:        #ef4444;
+      --purple:     #a855f7;
+      --pink:       #ec4899;
+      --teal:       #14b8a6;
+      --yellow:     #eab308;
+      --blue:       #3b82f6;
+      --indigo:     #6366f1;
+      --text:       #e8eaed;
+      --text-dim:   #9ca3af;
+      --text-muted: #6b7280;
+      --radius:     8px;
+      --font: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     html, body {
-      height: 100%;
+      min-height: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: var(--font);
@@ -35,52 +42,79 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Layout ── */
     .wrapper {
-      max-width: 860px;
+      max-width: 960px;
       margin: 0 auto;
-      padding: 0 20px 60px;
+      padding: 0 20px 80px;
     }
 
     /* ── Header ── */
     header {
-      padding: 48px 0 36px;
+      padding: 48px 0 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
-
     .logo {
       font-size: 2.6rem;
       font-weight: 800;
       letter-spacing: 0.25em;
       color: var(--accent);
-      text-shadow: 0 0 32px rgba(0, 212, 255, 0.3);
-      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 32px rgba(0,212,255,0.3);
     }
-
     .tagline {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--text-muted);
     }
 
-    /* ── Input Section ── */
+    /* ── Tab nav ── */
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color: var(--text-dim); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Input ── */
     .input-section {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 32px;
+      padding: 24px;
+      margin-bottom: 28px;
     }
-
     .input-row {
       display: flex;
       gap: 12px;
     }
-
     .url-input {
       flex: 1;
       background: var(--bg);
@@ -93,7 +127,6 @@
       outline: none;
       transition: border-color 0.2s;
     }
-
     .url-input::placeholder { color: var(--text-muted); }
     .url-input:focus { border-color: var(--accent-dim); }
 
@@ -103,7 +136,7 @@
       border: none;
       border-radius: var(--radius);
       font-family: var(--font);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       padding: 12px 28px;
@@ -111,64 +144,66 @@
       white-space: nowrap;
       transition: background 0.2s, transform 0.1s;
     }
-
     .analyze-btn:hover:not(:disabled) { background: #33ddff; }
     .analyze-btn:active:not(:disabled) { transform: scale(0.98); }
     .analyze-btn:disabled { background: var(--accent-dim); cursor: not-allowed; opacity: 0.7; }
 
-    /* ── Loading State ── */
+    /* ── Loading ── */
     #loading {
       display: none;
       text-align: center;
-      padding: 48px 0;
+      padding: 40px 0;
     }
-
     .spinner {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border: 3px solid var(--border-hi);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin: 0 auto 20px;
+      margin: 0 auto 18px;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .loading-title {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--accent);
-      margin-bottom: 6px;
-    }
-
-    .loading-sub {
-      font-size: 0.82rem;
-      color: var(--text-muted);
+      margin-bottom: 20px;
     }
 
     .loading-steps {
-      margin-top: 18px;
-      display: flex;
+      display: inline-flex;
       flex-direction: column;
-      gap: 6px;
-      align-items: center;
+      gap: 8px;
+      text-align: left;
     }
-
     .step {
-      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
       color: var(--text-muted);
       transition: color 0.4s;
     }
+    .step-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--border-hi);
+      flex-shrink: 0;
+      transition: background 0.4s;
+    }
     .step.active { color: var(--accent); }
+    .step.active .step-dot { background: var(--accent); box-shadow: 0 0 6px rgba(0,212,255,0.6); }
     .step.done { color: var(--green); }
-    .step.done::before { content: "✓ "; }
+    .step.done .step-dot { background: var(--green); }
 
-    /* ── Error Banner ── */
+    /* ── Error ── */
     #error-banner {
       display: none;
-      background: rgba(255, 68, 68, 0.1);
-      border: 1px solid rgba(255, 68, 68, 0.3);
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
       border-radius: var(--radius);
       color: var(--red);
       padding: 14px 18px;
@@ -181,107 +216,585 @@
 
     .results-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
+      gap: 16px;
     }
+    .results-meta { display: flex; flex-direction: column; gap: 3px; }
+    .results-url { font-size: 0.82rem; color: var(--accent); word-break: break-all; }
+    .results-pages { font-size: 0.76rem; color: var(--text-muted); }
 
-    .results-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+    .results-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 
-    .results-url {
-      font-size: 0.82rem;
-      color: var(--accent);
-      word-break: break-all;
-    }
-
-    .results-pages {
-      font-size: 0.76rem;
-      color: var(--text-muted);
-    }
-
-    .new-analysis-btn {
+    .btn-secondary {
       background: transparent;
       border: 1px solid var(--border-hi);
       border-radius: var(--radius);
       color: var(--text-dim);
       font-family: var(--font);
       font-size: 0.8rem;
-      padding: 8px 16px;
+      padding: 8px 14px;
       cursor: pointer;
       transition: border-color 0.2s, color 0.2s;
       white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .new-analysis-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+    .btn-secondary:hover { border-color: var(--accent-dim); color: var(--accent); }
 
-    /* ── Cards ── */
+    .btn-pdf {
+      background: rgba(0,212,255,0.08);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+    }
+    .btn-pdf:hover { background: rgba(0,212,255,0.14); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Source badges ── */
+    .source-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: 1px solid transparent;
+    }
+    .badge--ok {
+      background: rgba(16,185,129,0.1);
+      border-color: rgba(16,185,129,0.25);
+      color: var(--green);
+    }
+    .badge--miss {
+      background: rgba(107,114,128,0.08);
+      border-color: rgba(107,114,128,0.2);
+      color: var(--text-muted);
+    }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
+    .badge--ok .badge-dot { background: var(--green); }
+    .badge--miss .badge-dot { background: var(--text-muted); }
+
+    /* ── Score panel ── */
+    .score-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .score-panel-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .scores-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    .score-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .score-item.overall {
+      background: rgba(0,212,255,0.05);
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 8px;
+      padding: 8px 4px;
+    }
+    .score-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+    .score-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .score-item.overall .score-value { font-size: 1.7rem; }
+    .score-bar-wrap { width: 100%; height: 3px; background: var(--border-hi); border-radius: 2px; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+
+    /* ── Exec summary banner ── */
+    .exec-banner {
+      background: var(--surface-hi);
+      border: 1px solid var(--border-hi);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .exec-banner-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .exec-banner-text {
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+
+    /* ── Cards grid ── */
     .cards-grid {
       display: grid;
-      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
+    .card-full { grid-column: 1 / -1; }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px;
+      padding: 20px;
       transition: border-color 0.2s;
     }
     .card:hover { border-color: var(--border-hi); }
+
+    .card--events {
+      border-color: rgba(234,179,8,0.25);
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(234,179,8,0.04) 100%);
+    }
+    .card--events:hover { border-color: rgba(234,179,8,0.45); }
+    .card--risk { border-color: rgba(239,68,68,0.2); }
 
     .card-header {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
-
     .card-icon {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 0.95rem;
       flex-shrink: 0;
     }
-
     .card-title {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--text-muted);
     }
-
     .card-body {
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       line-height: 1.75;
       color: var(--text-dim);
       white-space: pre-wrap;
     }
 
-    /* Card accent colors */
-    .card--focus  .card-icon { background: rgba(0, 212, 255, 0.12); }
-    .card--team   .card-icon { background: rgba(0, 230, 118, 0.12); }
-    .card--roadmap .card-icon { background: rgba(255, 193, 7, 0.12); }
-    .card--uvp    .card-icon { background: rgba(147, 51, 234, 0.12); }
-    .card--comp   .card-icon { background: rgba(249, 115, 22, 0.12); }
-    .card--risk   .card-icon { background: rgba(255, 68, 68, 0.12); }
+    .card--events .card-icon  { background: rgba(234,179,8,0.12); }
+    .card--focus .card-icon   { background: rgba(0,212,255,0.1); }
+    .card--team .card-icon    { background: rgba(16,185,129,0.1); }
+    .card--token .card-icon   { background: rgba(168,85,247,0.1); }
+    .card--road .card-icon    { background: rgba(245,158,11,0.1); }
+    .card--uvp .card-icon     { background: rgba(0,212,255,0.1); }
+    .card--comp .card-icon    { background: rgba(249,115,22,0.1); }
+    .card--comm .card-icon    { background: rgba(236,72,153,0.1); }
+    .card--chain .card-icon   { background: rgba(20,184,166,0.1); }
+    .card--risk .card-icon    { background: rgba(239,68,68,0.1); }
 
-    .card--risk .card-body { color: #e8a09a; }
+    .card--risk .card-body { color: #f0a3a3; }
+    .card--events .card-body { color: #ddd; }
+
+    /* ── Similar projects strip ── */
+    #similar-section {
+      display: none;
+      margin-top: 20px;
+    }
+    .similar-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .similar-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .similar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      min-width: 160px;
+      flex: 1;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .similar-card:hover { border-color: var(--border-hi); }
+    .similar-card-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .similar-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .similar-card-score {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* ── Sector badge pill ── */
+    .sector-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    /* ── Library tab ── */
+    .library-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .lib-search {
+      flex: 1;
+      min-width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.88rem;
+      padding: 9px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .lib-search::placeholder { color: var(--text-muted); }
+    .lib-search:focus { border-color: var(--accent-dim); }
+
+    .sector-filter {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .sector-filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sector-filter-btn:hover { border-color: var(--border-hi); color: var(--text); }
+    .sector-filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.06); }
+
+    .lib-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .lib-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .lib-card:hover { border-color: var(--border-hi); }
+    .lib-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), inset 0 0 0 1000px rgba(0,212,255,0.04);
+    }
+    .lib-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    .lib-card-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-word;
+      line-height: 1.3;
+    }
+    .lib-card-score {
+      font-size: 1.2rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .lib-card-url {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lib-card-summary {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .lib-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+    .lib-card-date {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .lib-card-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .lib-btn {
+      background: transparent;
+      border: 1px solid var(--border-hi);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .lib-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+    .lib-btn--rescan { border-color: rgba(16,185,129,0.3); color: var(--green); }
+    .lib-btn--rescan:hover { border-color: var(--green); background: rgba(16,185,129,0.08); }
+
+    .lib-select-check {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border-hi);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: transparent;
+      transition: all 0.15s;
+      pointer-events: none;
+    }
+    .lib-card.selected .lib-select-check {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+
+    #lib-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    #lib-empty strong { display: block; font-size: 1.1rem; margin-bottom: 8px; color: var(--text-dim); }
+
+    /* ── Compare bar (fixed bottom) ── */
+    #compare-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10,12,15,0.96);
+      border-top: 1px solid var(--border-hi);
+      backdrop-filter: blur(12px);
+      padding: 14px 24px;
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+    }
+    #compare-bar.visible { display: flex; }
+    .compare-bar-label {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+    .compare-bar-label strong { color: var(--accent); }
+    .btn-compare {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 9px 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-compare:hover { background: #33ddff; }
+    .btn-compare:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 0.78rem;
+      padding: 7px 14px;
+      cursor: pointer;
+    }
+    .btn-clear:hover { color: var(--red); border-color: rgba(239,68,68,0.4); }
+
+    /* ── Compare modal ── */
+    #compare-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    #compare-modal.open { display: flex; }
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 16px;
+      max-width: 760px;
+      width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px;
+      z-index: 1;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-comparing {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .modal-project-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-hi);
+      border: 1px solid var(--border-hi);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+    .modal-body {
+      font-size: 0.875rem;
+      line-height: 1.8;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+    }
+    .modal-body h1, .modal-body h2, .modal-body h3 {
+      color: var(--text);
+      margin: 16px 0 6px;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+    .modal-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      gap: 14px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
 
     /* ── Footer ── */
     footer {
       text-align: center;
-      padding: 32px 0 0;
-      font-size: 0.74rem;
+      padding: 28px 0 0;
+      font-size: 0.72rem;
       color: var(--text-muted);
       letter-spacing: 0.08em;
       border-top: 1px solid var(--border);
@@ -289,20 +802,38 @@
     }
 
     /* ── Responsive ── */
-    @media (max-width: 600px) {
+    @media (max-width: 640px) {
       .input-row { flex-direction: column; }
       .analyze-btn { width: 100%; }
-      .results-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .results-header { flex-direction: column; }
+      .results-actions { width: 100%; }
+      .scores-grid { grid-template-columns: repeat(3, 1fr); }
+      .cards-grid { grid-template-columns: 1fr; }
       .logo { font-size: 2rem; }
+      .lib-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .scores-grid { grid-template-columns: repeat(2, 1fr); }
+      .score-item.overall { grid-column: 1 / -1; }
     }
   </style>
 </head>
 <body>
-  <div class="wrapper">
-    <header>
-      <div class="logo">DECI</div>
-      <div class="tagline">Project Intelligence</div>
-    </header>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">DECI</div>
+    <div class="tagline">Project Intelligence</div>
+  </header>
+
+  <!-- Tab nav -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="analyze">Analyze</button>
+    <button class="tab-btn" data-tab="library" id="library-tab-btn">Research Library</button>
+  </nav>
+
+  <!-- ══ ANALYZE TAB ══ -->
+  <div class="tab-panel active" id="tab-analyze">
 
     <!-- Input -->
     <div class="input-section">
@@ -325,206 +856,667 @@
     <!-- Loading -->
     <div id="loading">
       <div class="spinner"></div>
-      <div class="loading-title">Analyzing Project</div>
-      <div class="loading-sub">Scraping website and generating intelligence report...</div>
+      <div class="loading-title">Deep Research in Progress</div>
       <div class="loading-steps">
-        <div class="step" id="step-1">Fetching main page</div>
-        <div class="step" id="step-2">Crawling linked pages</div>
-        <div class="step" id="step-3">Extracting content</div>
-        <div class="step" id="step-4">Running AI analysis</div>
-        <div class="step" id="step-5">Generating report</div>
+        <div class="step" id="step-0"><span class="step-dot"></span>Crawling website &amp; linked pages</div>
+        <div class="step" id="step-1"><span class="step-dot"></span>Fetching GitHub repository data</div>
+        <div class="step" id="step-2"><span class="step-dot"></span>Checking CoinGecko token data</div>
+        <div class="step" id="step-3"><span class="step-dot"></span>Checking DeFiLlama TVL data</div>
+        <div class="step" id="step-4"><span class="step-dot"></span>Searching recent news &amp; events</div>
+        <div class="step" id="step-5"><span class="step-dot"></span>Scanning Twitter/X mentions</div>
+        <div class="step" id="step-6"><span class="step-dot"></span>Running deep AI analysis</div>
       </div>
     </div>
 
     <!-- Results -->
     <div id="results">
+
+      <!-- Header row -->
       <div class="results-header">
         <div class="results-meta">
           <div class="results-url" id="results-url"></div>
           <div class="results-pages" id="results-pages"></div>
         </div>
-        <button class="new-analysis-btn" id="new-analysis-btn">+ New Analysis</button>
+        <div class="results-actions">
+          <a id="download-btn" class="btn-secondary btn-pdf" style="display:none" target="_blank">
+            &#8595; Download PDF
+          </a>
+          <button class="btn-secondary" id="new-analysis-btn">+ New Analysis</button>
+        </div>
       </div>
+
+      <!-- Source badges -->
+      <div class="source-badges" id="source-badges"></div>
+
+      <!-- Scores -->
+      <div class="score-panel">
+        <div class="score-panel-title">Intelligence Scores</div>
+        <div class="scores-grid" id="scores-grid"></div>
+      </div>
+
+      <!-- Executive summary banner -->
+      <div class="exec-banner" id="exec-banner" style="display:none">
+        <div class="exec-banner-label">Executive Summary</div>
+        <div class="exec-banner-text" id="exec-text"></div>
+      </div>
+
+      <!-- Cards -->
       <div class="cards-grid" id="cards-grid"></div>
+
+      <!-- Similar projects -->
+      <div id="similar-section">
+        <div class="similar-title">Similar Projects in Library</div>
+        <div class="similar-grid" id="similar-grid"></div>
+      </div>
+
+    </div>
+  </div><!-- /tab-analyze -->
+
+  <!-- ══ LIBRARY TAB ══ -->
+  <div class="tab-panel" id="tab-library">
+
+    <!-- Toolbar -->
+    <div class="library-toolbar">
+      <input
+        type="text"
+        id="lib-search"
+        class="lib-search"
+        placeholder="Search by name, sector, tags…"
+        autocomplete="off"
+      />
     </div>
 
-    <footer>DECI &mdash; POWERED BY CLAUDE &mdash; FOR RESEARCH PURPOSES ONLY</footer>
+    <!-- Sector filters -->
+    <div class="sector-filter" id="sector-filter" style="margin-bottom:18px;">
+      <button class="sector-filter-btn active" data-sector="All">All</button>
+    </div>
+
+    <!-- Compare mode hint -->
+    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;" id="lib-hint">
+      Click cards to select them for comparison. Use Re-scan to refresh any project.
+    </div>
+
+    <!-- Project grid -->
+    <div class="lib-grid" id="lib-grid"></div>
+
+    <div id="lib-empty" style="display:none">
+      <strong>No projects yet</strong>
+      Analyze a project to save it to your library.
+    </div>
+
+  </div><!-- /tab-library -->
+
+  <footer>DECI &mdash; POWERED BY CLAUDE &mdash; FOR RESEARCH PURPOSES ONLY</footer>
+</div>
+
+<!-- ── Compare bar (fixed bottom) ── -->
+<div id="compare-bar">
+  <span class="compare-bar-label"><strong id="compare-count">0</strong> projects selected</span>
+  <button class="btn-compare" id="compare-btn">Compare</button>
+  <button class="btn-clear" id="compare-clear-btn">Clear</button>
+</div>
+
+<!-- ── Compare modal ── -->
+<div id="compare-modal">
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Competitive Intelligence</div>
+      <button class="modal-close" id="modal-close">&#x2715;</button>
+    </div>
+    <div class="modal-comparing" id="modal-comparing"></div>
+    <div id="modal-body-wrap">
+      <div class="modal-spinner" id="modal-spinner">
+        <div class="spinner" style="width:36px;height:36px;"></div>
+        Generating comparison…
+      </div>
+      <div class="modal-body" id="modal-body" style="display:none"></div>
+    </div>
   </div>
+</div>
 
-  <script>
-    const CARDS_CONFIG = [
-      {
-        key: "project_focus",
-        title: "Project Focus",
-        icon: "◎",
-        cls: "card--focus",
-      },
-      {
-        key: "team",
-        title: "Team",
-        icon: "◈",
-        cls: "card--team",
-      },
-      {
-        key: "roadmap",
-        title: "Roadmap",
-        icon: "◷",
-        cls: "card--roadmap",
-      },
-      {
-        key: "unique_value_proposition",
-        title: "Unique Value Proposition",
-        icon: "◆",
-        cls: "card--uvp",
-      },
-      {
-        key: "competitors",
-        title: "Competitors",
-        icon: "◉",
-        cls: "card--comp",
-      },
-      {
-        key: "execution_risk",
-        title: "Execution Risk",
-        icon: "⚠",
-        cls: "card--risk",
-      },
+<script>
+  // ── Sector colors ──────────────────────────────────────────────────────────
+  const SECTOR_COLORS = {
+    'AI':             '#a855f7',
+    'DeFi':           '#3b82f6',
+    'Gaming':         '#10b981',
+    'Meme':           '#eab308',
+    'L1/L2':          '#00d4ff',
+    'NFT':            '#ec4899',
+    'Infrastructure': '#f97316',
+    'Social':         '#14b8a6',
+    'RWA':            '#f59e0b',
+    'Privacy':        '#8b5cf6',
+    'Oracle':         '#6366f1',
+    'DEX':            '#06b6d4',
+    'Lending':        '#0ea5e9',
+    'Payments':       '#22c55e',
+    'Other':          '#6b7280',
+  };
+
+  function sectorColor(s) {
+    return SECTOR_COLORS[s] || SECTOR_COLORS['Other'];
+  }
+
+  function sectorPillHTML(sector) {
+    const c = sectorColor(sector);
+    return `<span class="sector-pill" style="color:${c};background:${c}18;border-color:${c}40">${escapeHtml(sector || 'Other')}</span>`;
+  }
+
+  // ── Analyze tab ────────────────────────────────────────────────────────────
+  const CARDS = [
+    { key: "recent_events",         title: "Recent Events & News",      icon: "⚡", cls: "card--events card-full" },
+    { key: "project_focus",         title: "Project Focus & Technology", icon: "◎", cls: "card--focus" },
+    { key: "team",                  title: "Team & Backers",             icon: "◈", cls: "card--team" },
+    { key: "tokenomics",            title: "Tokenomics",                icon: "◆", cls: "card--token" },
+    { key: "roadmap",               title: "Roadmap & Milestones",      icon: "◷", cls: "card--road" },
+    { key: "unique_value_proposition", title: "Unique Value Proposition", icon: "★", cls: "card--uvp" },
+    { key: "competitive_landscape", title: "Competitive Landscape",     icon: "⊕", cls: "card--comp" },
+    { key: "community_social",      title: "Community & Social",        icon: "◉", cls: "card--comm" },
+    { key: "on_chain_metrics",      title: "On-Chain Metrics",          icon: "⛓", cls: "card--chain" },
+    { key: "risk_assessment",       title: "Risk Assessment",           icon: "⚠", cls: "card--risk card-full" },
+  ];
+
+  const SOURCE_LABELS = {
+    github:    "GitHub",
+    coingecko: "CoinGecko",
+    defillama: "DeFiLlama",
+    news:      "News Search",
+    twitter:   "Twitter/X",
+  };
+
+  const STEP_TIMINGS = [4000, 5500, 6500, 7500, 9000, 10500];
+
+  const urlInput     = document.getElementById("url-input");
+  const analyzeBtn   = document.getElementById("analyze-btn");
+  const loadingEl    = document.getElementById("loading");
+  const resultsEl    = document.getElementById("results");
+  const errorBanner  = document.getElementById("error-banner");
+  const cardsGrid    = document.getElementById("cards-grid");
+  const scoresGrid   = document.getElementById("scores-grid");
+  const sourceBadges = document.getElementById("source-badges");
+  const execBanner   = document.getElementById("exec-banner");
+  const execText     = document.getElementById("exec-text");
+  const downloadBtn  = document.getElementById("download-btn");
+  const newBtn       = document.getElementById("new-analysis-btn");
+  const stepEls      = Array.from({ length: 7 }, (_, i) => document.getElementById(`step-${i}`));
+  const similarSection = document.getElementById("similar-section");
+  const similarGrid    = document.getElementById("similar-grid");
+
+  let stepTimers = [];
+
+  function startSteps() {
+    stepEls.forEach(s => { s.className = "step"; });
+    stepEls[0].classList.add("active");
+    STEP_TIMINGS.forEach((delay, i) => {
+      const t = setTimeout(() => {
+        stepEls[i].classList.remove("active");
+        stepEls[i].classList.add("done");
+        if (i + 1 < stepEls.length) stepEls[i + 1].classList.add("active");
+      }, delay);
+      stepTimers.push(t);
+    });
+  }
+
+  function clearSteps() {
+    stepTimers.forEach(clearTimeout);
+    stepTimers = [];
+  }
+
+  function showLoading() {
+    errorBanner.style.display = "none";
+    resultsEl.style.display = "none";
+    loadingEl.style.display = "block";
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = "ANALYZING…";
+    startSteps();
+  }
+
+  function hideLoading() {
+    clearSteps();
+    loadingEl.style.display = "none";
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = "ANALYZE";
+  }
+
+  function showError(msg) {
+    errorBanner.textContent = msg;
+    errorBanner.style.display = "block";
+    resultsEl.style.display = "none";
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function scoreColor(s) {
+    const n = parseFloat(s);
+    if (n >= 8) return "var(--green)";
+    if (n >= 6) return "var(--amber)";
+    if (n >= 4) return "var(--orange)";
+    return "var(--red)";
+  }
+
+  function renderScores(scores) {
+    scoresGrid.innerHTML = "";
+    const defs = [
+      { key: "team",       label: "Team" },
+      { key: "technology", label: "Technology" },
+      { key: "tokenomics", label: "Tokenomics" },
+      { key: "community",  label: "Community" },
+      { key: "execution",  label: "Execution" },
+      { key: "overall",    label: "Overall", isOverall: true },
     ];
+    defs.forEach(({ key, label, isOverall }) => {
+      const val = scores[key] || 0;
+      const pct = Math.round((parseFloat(val) / 10) * 100);
+      const color = scoreColor(val);
+      const item = document.createElement("div");
+      item.className = "score-item" + (isOverall ? " overall" : "");
+      item.innerHTML = `
+        <div class="score-label">${label}</div>
+        <div class="score-value" style="color:${color}">${val}</div>
+        <div class="score-bar-wrap">
+          <div class="score-bar" style="width:${pct}%;background:${color}"></div>
+        </div>
+      `;
+      scoresGrid.appendChild(item);
+    });
+  }
 
-    const urlInput   = document.getElementById("url-input");
-    const analyzeBtn = document.getElementById("analyze-btn");
-    const loading    = document.getElementById("loading");
-    const results    = document.getElementById("results");
-    const errorBanner = document.getElementById("error-banner");
-    const cardsGrid  = document.getElementById("cards-grid");
-    const newAnalysisBtn = document.getElementById("new-analysis-btn");
+  function renderSourceBadges(sources) {
+    sourceBadges.innerHTML = "";
+    const allSources = { website: { available: true }, ...sources };
+    const labels = { website: "Website", ...SOURCE_LABELS };
+    Object.entries(labels).forEach(([key, label]) => {
+      const s = allSources[key] || {};
+      const ok = s.available;
+      const badge = document.createElement("span");
+      badge.className = `badge ${ok ? "badge--ok" : "badge--miss"}`;
+      let text = label;
+      if (ok && s.count) text += ` (${s.count})`;
+      badge.innerHTML = `<span class="badge-dot"></span>${escapeHtml(text)}`;
+      sourceBadges.appendChild(badge);
+    });
+  }
 
-    const steps = [
-      document.getElementById("step-1"),
-      document.getElementById("step-2"),
-      document.getElementById("step-3"),
-      document.getElementById("step-4"),
-      document.getElementById("step-5"),
-    ];
-
-    let stepInterval = null;
-
-    function startStepAnimation() {
-      let current = 0;
-      steps.forEach(s => { s.className = "step"; });
-      steps[0].classList.add("active");
-
-      const timings = [2000, 6000, 12000, 18000];
-      timings.forEach((delay, i) => {
-        setTimeout(() => {
-          steps[i].classList.remove("active");
-          steps[i].classList.add("done");
-          if (i + 1 < steps.length) {
-            steps[i + 1].classList.add("active");
-          }
-        }, delay);
+  function renderSimilar(projects) {
+    if (!projects || projects.length === 0) {
+      similarSection.style.display = "none";
+      return;
+    }
+    similarGrid.innerHTML = "";
+    projects.forEach(p => {
+      const score = p.scores?.overall ?? "—";
+      const card = document.createElement("div");
+      card.className = "similar-card";
+      card.title = p.url;
+      card.innerHTML = `
+        <div class="similar-card-name">${escapeHtml(p.name || p.url)}</div>
+        <div class="similar-card-meta">
+          ${sectorPillHTML(p.sector)}
+          <span class="similar-card-score">${score}/10</span>
+        </div>
+      `;
+      // Click to switch to library and highlight
+      card.addEventListener("click", () => {
+        switchTab("library");
+        setTimeout(() => highlightLibCard(p.id), 200);
       });
+      similarGrid.appendChild(card);
+    });
+    similarSection.style.display = "block";
+  }
+
+  function renderResults(data) {
+    document.getElementById("results-url").textContent = data.url;
+    document.getElementById("results-pages").textContent =
+      `${data.pages_scraped} page${data.pages_scraped !== 1 ? "s" : ""} analyzed`;
+
+    if (data.report_id) {
+      downloadBtn.href = `/api/report/${data.report_id}`;
+      downloadBtn.style.display = "inline-flex";
     }
 
-    function showLoading() {
-      errorBanner.style.display = "none";
-      results.style.display = "none";
-      loading.style.display = "block";
-      analyzeBtn.disabled = true;
-      analyzeBtn.textContent = "ANALYZING…";
-      startStepAnimation();
+    renderSourceBadges(data.sources || {});
+
+    if (data.report.scores) renderScores(data.report.scores);
+
+    const exec = data.report.executive_summary;
+    if (exec && exec !== "N/A" && exec !== "Not available.") {
+      execText.textContent = exec;
+      execBanner.style.display = "block";
+    } else {
+      execBanner.style.display = "none";
     }
 
-    function hideLoading() {
-      loading.style.display = "none";
-      analyzeBtn.disabled = false;
-      analyzeBtn.textContent = "ANALYZE";
+    // Show sector badge in results header
+    const sector = data.report.sector;
+    if (sector) {
+      const existing = document.getElementById("result-sector-pill");
+      if (existing) existing.remove();
+      const pill = document.createElement("span");
+      pill.id = "result-sector-pill";
+      pill.style.marginTop = "4px";
+      pill.innerHTML = sectorPillHTML(sector);
+      document.getElementById("results-meta").appendChild(pill);
     }
 
-    function showError(msg) {
-      errorBanner.textContent = msg;
-      errorBanner.style.display = "block";
-      results.style.display = "none";
+    cardsGrid.innerHTML = "";
+    CARDS.forEach(cfg => {
+      const text = data.report[cfg.key] || "Not available.";
+      const card = document.createElement("div");
+      card.className = `card ${cfg.cls}`;
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-icon">${cfg.icon}</div>
+          <div class="card-title">${cfg.title}</div>
+        </div>
+        <div class="card-body">${escapeHtml(text)}</div>
+      `;
+      cardsGrid.appendChild(card);
+    });
+
+    renderSimilar(data.similar_projects || []);
+
+    resultsEl.style.display = "block";
+    resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function runAnalysis(prefillUrl) {
+    const url = prefillUrl || urlInput.value.trim();
+    if (!url) { urlInput.focus(); return; }
+    if (!prefillUrl) {
+      urlInput.value = url;
     }
 
-    function renderResults(data) {
-      document.getElementById("results-url").textContent = data.url;
-      document.getElementById("results-pages").textContent =
-        `${data.pages_scraped} page${data.pages_scraped !== 1 ? "s" : ""} analyzed`;
+    showLoading();
+    downloadBtn.style.display = "none";
 
-      cardsGrid.innerHTML = "";
-      CARDS_CONFIG.forEach(cfg => {
-        const text = data.report[cfg.key] || "Not available.";
-        const card = document.createElement("div");
-        card.className = `card ${cfg.cls}`;
-        card.innerHTML = `
-          <div class="card-header">
-            <div class="card-icon">${cfg.icon}</div>
-            <div class="card-title">${cfg.title}</div>
-          </div>
-          <div class="card-body">${escapeHtml(text)}</div>
-        `;
-        cardsGrid.appendChild(card);
+    try {
+      const resp = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
       });
+      const data = await resp.json();
+      hideLoading();
 
-      results.style.display = "block";
-      results.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    async function runAnalysis() {
-      const url = urlInput.value.trim();
-      if (!url) {
-        urlInput.focus();
+      if (!resp.ok) {
+        showError(data.detail || "An error occurred. Please try again.");
         return;
       }
 
-      showLoading();
+      renderResults(data);
 
-      try {
-        const resp = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
+      // Refresh library cache in background
+      loadLibraryData();
+    } catch (err) {
+      hideLoading();
+      showError("Network error — could not reach the server. Please try again.");
+    }
+  }
 
-        const data = await resp.json();
+  analyzeBtn.addEventListener("click", () => runAnalysis());
+  urlInput.addEventListener("keydown", e => { if (e.key === "Enter") runAnalysis(); });
 
-        hideLoading();
+  newBtn.addEventListener("click", () => {
+    resultsEl.style.display = "none";
+    errorBanner.style.display = "none";
+    urlInput.value = "";
+    urlInput.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 
-        if (!resp.ok) {
-          showError(data.detail || "An error occurred. Please try again.");
-          return;
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === `tab-${name}`));
+    if (name === "library") loadLibraryData();
+  }
+
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  });
+
+  // ── Library ────────────────────────────────────────────────────────────────
+  let allProjects   = [];
+  let selectedIds   = new Set();
+  let activeSector  = "All";
+  let libSearchQ    = "";
+
+  async function loadLibraryData() {
+    try {
+      const resp = await fetch("/api/projects");
+      allProjects = await resp.json();
+      rebuildSectorFilters();
+      renderLibrary();
+    } catch (e) {
+      // silently fail on background refresh
+    }
+  }
+
+  function rebuildSectorFilters() {
+    const sectors = ["All", ...new Set(allProjects.map(p => p.sector || "Other").filter(Boolean))].sort((a, b) => a === "All" ? -1 : b === "All" ? 1 : a.localeCompare(b));
+    const container = document.getElementById("sector-filter");
+    container.innerHTML = "";
+    sectors.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className = "sector-filter-btn" + (s === activeSector ? " active" : "");
+      btn.dataset.sector = s;
+      btn.textContent = s;
+      if (s !== "All") {
+        const c = sectorColor(s);
+        if (s === activeSector) {
+          btn.style.color = c;
+          btn.style.borderColor = c;
+          btn.style.background = `${c}18`;
         }
-
-        renderResults(data);
-
-      } catch (err) {
-        hideLoading();
-        showError("Network error — could not reach the server. Please try again.");
       }
+      btn.addEventListener("click", () => {
+        activeSector = s;
+        rebuildSectorFilters();
+        renderLibrary();
+      });
+      container.appendChild(btn);
+    });
+  }
+
+  function renderLibrary() {
+    const grid  = document.getElementById("lib-grid");
+    const empty = document.getElementById("lib-empty");
+
+    let projects = allProjects.slice();
+
+    if (activeSector !== "All") {
+      projects = projects.filter(p => (p.sector || "Other") === activeSector);
     }
 
-    analyzeBtn.addEventListener("click", runAnalysis);
+    if (libSearchQ) {
+      const q = libSearchQ.toLowerCase();
+      projects = projects.filter(p =>
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.url || "").toLowerCase().includes(q) ||
+        (p.sector || "").toLowerCase().includes(q) ||
+        (p.tags || "").toLowerCase().includes(q) ||
+        (p.summary || "").toLowerCase().includes(q)
+      );
+    }
 
-    urlInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") runAnalysis();
-    });
+    if (projects.length === 0) {
+      grid.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
 
-    newAnalysisBtn.addEventListener("click", () => {
-      results.style.display = "none";
-      errorBanner.style.display = "none";
-      urlInput.value = "";
-      urlInput.focus();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  </script>
+    empty.style.display = "none";
+    grid.innerHTML = "";
+    projects.forEach(p => grid.appendChild(buildLibCard(p)));
+  }
+
+  function buildLibCard(p) {
+    const score   = p.scores?.overall ?? "—";
+    const color   = scoreColor(score);
+    const isSelected = selectedIds.has(p.id);
+    const date    = p.updated_at ? new Date(p.updated_at + "Z").toLocaleDateString() : "";
+
+    const card = document.createElement("div");
+    card.className = "lib-card" + (isSelected ? " selected" : "");
+    card.dataset.id = p.id;
+
+    card.innerHTML = `
+      <div class="lib-select-check">✓</div>
+      <div class="lib-card-top">
+        <div class="lib-card-name">${escapeHtml(p.name || p.url)}</div>
+        <div class="lib-card-score" style="color:${color}">${score}</div>
+      </div>
+      <div class="lib-card-url">${escapeHtml(p.url)}</div>
+      <div style="margin-bottom:8px;">${sectorPillHTML(p.sector || "Other")}</div>
+      <div class="lib-card-summary">${escapeHtml(p.summary || "")}</div>
+      <div class="lib-card-footer">
+        <div class="lib-card-date">${escapeHtml(date)}</div>
+        <div class="lib-card-actions">
+          <button class="lib-btn lib-btn--rescan" data-url="${escapeHtml(p.url)}" onclick="event.stopPropagation(); rescanProject(this.dataset.url)">Re-scan</button>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => toggleSelect(p.id));
+    return card;
+  }
+
+  function toggleSelect(id) {
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      if (selectedIds.size >= 5) {
+        // Max 5
+        return;
+      }
+      selectedIds.add(id);
+    }
+    updateCompareBar();
+    // Re-render just this card's selection state
+    const card = document.querySelector(`.lib-card[data-id="${id}"]`);
+    if (card) card.classList.toggle("selected", selectedIds.has(id));
+  }
+
+  function updateCompareBar() {
+    const bar = document.getElementById("compare-bar");
+    const count = selectedIds.size;
+    document.getElementById("compare-count").textContent = count;
+    document.getElementById("compare-btn").disabled = count < 2;
+    if (count > 0) {
+      bar.classList.add("visible");
+    } else {
+      bar.classList.remove("visible");
+    }
+  }
+
+  function clearCompare() {
+    selectedIds.clear();
+    updateCompareBar();
+    document.querySelectorAll(".lib-card.selected").forEach(c => c.classList.remove("selected"));
+  }
+
+  document.getElementById("compare-clear-btn").addEventListener("click", clearCompare);
+
+  document.getElementById("compare-btn").addEventListener("click", async () => {
+    if (selectedIds.size < 2) return;
+    openCompareModal([...selectedIds]);
+  });
+
+  function highlightLibCard(id) {
+    const card = document.querySelector(`.lib-card[data-id="${id}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.style.boxShadow = "0 0 0 2px var(--accent)";
+      setTimeout(() => { card.style.boxShadow = ""; }, 2000);
+    }
+  }
+
+  async function rescanProject(url) {
+    switchTab("analyze");
+    urlInput.value = url;
+    await runAnalysis(url);
+  }
+
+  // ── Search ─────────────────────────────────────────────────────────────────
+  document.getElementById("lib-search").addEventListener("input", e => {
+    libSearchQ = e.target.value.trim();
+    renderLibrary();
+  });
+
+  // ── Compare modal ──────────────────────────────────────────────────────────
+  async function openCompareModal(ids) {
+    const modal = document.getElementById("compare-modal");
+    const spinner = document.getElementById("modal-spinner");
+    const body = document.getElementById("modal-body");
+    const comparing = document.getElementById("modal-comparing");
+
+    // Build project chips
+    const projects = allProjects.filter(p => ids.includes(p.id));
+    comparing.innerHTML = projects.map(p =>
+      `<span class="modal-project-chip">${sectorPillHTML(p.sector)}&nbsp;${escapeHtml(p.name || p.url)}</span>`
+    ).join("");
+
+    spinner.style.display = "flex";
+    body.style.display = "none";
+    body.textContent = "";
+    modal.classList.add("open");
+
+    try {
+      const resp = await fetch("/api/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_ids: ids }),
+      });
+      const data = await resp.json();
+
+      spinner.style.display = "none";
+      body.style.display = "block";
+
+      if (!resp.ok) {
+        body.textContent = data.detail || "Comparison failed.";
+        return;
+      }
+
+      // Render comparison text with simple markdown-like formatting
+      body.innerHTML = formatCompareText(data.comparison);
+    } catch (err) {
+      spinner.style.display = "none";
+      body.style.display = "block";
+      body.textContent = "Network error — could not generate comparison.";
+    }
+  }
+
+  function formatCompareText(text) {
+    if (!text) return "";
+    return escapeHtml(text)
+      .replace(/^#### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  }
+
+  function closeModal() {
+    document.getElementById("compare-modal").classList.remove("open");
+  }
+
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.getElementById("modal-backdrop").addEventListener("click", closeModal);
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  // Load library data on first visit to library tab (or preload on page load)
+  loadLibraryData();
+</script>
 </body>
 </html>
