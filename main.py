@@ -36,7 +36,11 @@ report_store: dict[str, dict] = {}
 
 @app.on_event("startup")
 async def startup():
-    await init_db()
+    try:
+        await init_db()
+    except Exception as e:
+        # Log but don't crash — app runs without DB persistence
+        print(f"WARNING: database init failed: {e}", flush=True)
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
