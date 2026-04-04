@@ -60,15 +60,7 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.post("/api/analyze")
-async def analyze_url(body: AnalyzeRequest):
-    url = body.url.strip()
-    if not url:
-        raise HTTPException(status_code=400, detail="URL is required.")
-
-    if not url.startswith(("http://", "https://")):
-        url = "https://" + url
-
+async def _do_analyze(url: str) -> dict:
     scraped = await scrape(url)
     if scraped.get("error") and scraped["pages_scraped"] == 0:
         raise HTTPException(status_code=422, detail=scraped["error"])
@@ -81,6 +73,26 @@ async def analyze_url(body: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+    return scraped, sources, report
+
+
+@app.post("/api/analyze")
+async def analyze_url(body: AnalyzeRequest):
+    url = body.url.strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="URL is required.")
+
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    try:
+        scraped, sources, report = await asyncio.wait_for(_do_analyze(url), timeout=90)
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=504,
+            detail="Analysis timed out — the site may be too slow or complex. Try a simpler URL.",
+        )
 
     # Store for PDF download
     report_id = str(uuid.uuid4())
