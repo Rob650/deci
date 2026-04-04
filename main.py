@@ -39,7 +39,7 @@ async def analyze_url(body: AnalyzeRequest):
         url = "https://" + url
 
     # Scrape
-    scraped = scrape(url)
+    scraped = await scrape(url)
     if scraped.get("error") and scraped["pages_scraped"] == 0:
         raise HTTPException(status_code=422, detail=scraped["error"])
 

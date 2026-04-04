@@ -1,4 +1,5 @@
 import os
+import asyncio
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
@@ -14,7 +15,7 @@ except ImportError:
     PDF_SUPPORT = False
 
 try:
-    from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+    from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeout
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -140,45 +141,49 @@ def fetch_page(url: str, session: requests.Session) -> str | None:
     return None
 
 
-def fetch_with_playwright(url: str) -> str | None:
+async def fetch_with_playwright(url: str) -> str | None:
     """Render the page in a headless browser and return its visible text."""
     print(f"PLAYWRIGHT_AVAILABLE: {PLAYWRIGHT_AVAILABLE}")
     if not PLAYWRIGHT_AVAILABLE:
         return None
     print(f"Attempting Playwright fetch for: {url}")
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
                 headless=True,
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
                 executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
             )
-            page = browser.new_page(
+            page = await browser.new_page(
                 user_agent=HEADERS["User-Agent"],
                 extra_http_headers={
                     "Accept-Language": "en-US,en;q=0.9",
                 },
             )
-            page.goto(url, wait_until="networkidle", timeout=30000)
+            try:
+                await page.goto(url, wait_until="networkidle", timeout=30000)
+            except PlaywrightTimeout:
+                # If networkidle times out, try domcontentloaded
+                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
             # Give extra time for lazy-loaded content
-            page.wait_for_timeout(2000)
-            text = page.inner_text("body")
-            browser.close()
+            await page.wait_for_timeout(2000)
+            text = await page.inner_text("body")
+            await browser.close()
             return text if text else None
     except PlaywrightTimeout:
-        # If networkidle times out, try domcontentloaded
+        # Retry with a fresh browser using domcontentloaded
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(
                     headless=True,
                     args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
                     executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
                 )
-                page = browser.new_page(user_agent=HEADERS["User-Agent"])
-                page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                page.wait_for_timeout(3000)
-                text = page.inner_text("body")
-                browser.close()
+                page = await browser.new_page(user_agent=HEADERS["User-Agent"])
+                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                await page.wait_for_timeout(3000)
+                text = await page.inner_text("body")
+                await browser.close()
                 return text if text else None
         except Exception as e:
             print(f"Playwright error (domcontentloaded fallback): {e}")
@@ -260,7 +265,7 @@ def discover_links(html: str, base_url: str) -> list[tuple[str, str, int]]:
     return results
 
 
-def scrape(url: str) -> dict:
+async def scrape(url: str) -> dict:
     """
     Main entry point. Returns:
     {
@@ -313,7 +318,7 @@ def scrape(url: str) -> dict:
         if needs_js_render and PLAYWRIGHT_AVAILABLE:
             # Use headless browser for this site
             print(f"Using Playwright fallback for: {current_url}")
-            pw_text = fetch_with_playwright(current_url)
+            pw_text = await fetch_with_playwright(current_url)
             if pw_text:
                 text = clean_playwright_text(pw_text)
                 title = ""
@@ -329,7 +334,7 @@ def scrape(url: str) -> dict:
                         if candidate not in visited:
                             queue.append((candidate, 8))
                     queue.sort(key=lambda x: x[1], reverse=True)
-                time.sleep(CRAWL_DELAY)
+                await asyncio.sleep(CRAWL_DELAY)
                 continue
 
         if not raw:
@@ -343,7 +348,7 @@ def scrape(url: str) -> dict:
 
         if current_url.lower().endswith(".pdf"):
             pages.append({"url": current_url, "title": "PDF Document", "text": raw})
-            time.sleep(CRAWL_DELAY)
+            await asyncio.sleep(CRAWL_DELAY)
             continue
 
         title = get_page_title(raw)
@@ -370,7 +375,7 @@ def scrape(url: str) -> dict:
                     queue.append((link_url, score))
             queue.sort(key=lambda x: x[1], reverse=True)
 
-        time.sleep(CRAWL_DELAY)
+        await asyncio.sleep(CRAWL_DELAY)
 
     if not pages:
         return {
