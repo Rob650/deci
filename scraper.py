@@ -48,13 +48,10 @@ PRIORITY_KEYWORDS = [
 ]
 
 FALLBACK_SUBPATHS = [
-    "/about", "/team", "/docs", "/whitepaper", "/roadmap", "/faq",
-    "/tokenomics", "/about-us", "/our-team", "/documentation",
-    "/technology", "/ecosystem", "/blog", "/news", "/litepaper",
-    "/protocol", "/product", "/features",
+    "/about", "/docs", "/tokenomics", "/team", "/whitepaper", "/roadmap",
 ]
 
-MAX_PAGES = 15
+MAX_PAGES = 6
 REQUEST_TIMEOUT = 20
 CRAWL_DELAY = 0.5
 MAX_RETRIES = 3
@@ -191,12 +188,12 @@ async def fetch_with_playwright(url: str) -> str | None:
                 },
             )
             try:
-                await page.goto(url, wait_until="networkidle", timeout=30000)
+                await page.goto(url, wait_until="networkidle", timeout=15000)
             except PlaywrightTimeout:
                 # If networkidle times out, try domcontentloaded
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=10000)
             # Give extra time for lazy-loaded content
-            await page.wait_for_timeout(2000)
+            await page.wait_for_timeout(500)
             text = await page.inner_text("body")
             await browser.close()
             if text:
@@ -212,8 +209,8 @@ async def fetch_with_playwright(url: str) -> str | None:
                     executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
                 )
                 page = await browser.new_page(user_agent=HEADERS["User-Agent"])
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                await page.wait_for_timeout(3000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=10000)
+                await page.wait_for_timeout(500)
                 text = await page.inner_text("body")
                 await browser.close()
                 if text:
@@ -301,19 +298,11 @@ def discover_links(html: str, base_url: str) -> list[tuple[str, str, int]]:
     return results
 
 
-async def scrape(url: str) -> dict:
+async def _scrape_inner(url: str, pages: list) -> dict:
     """
-    Main entry point. Returns:
-    {
-        "base_url": str,
-        "pages_scraped": int,
-        "content": [{"url": str, "title": str, "text": str}],
-        "error": str | None
-    }
+    Inner scrape logic. Appends scraped pages to the shared `pages` list so
+    the caller can access partial results even if a timeout cancels this coroutine.
     """
-    if not url.startswith(("http://", "https://")):
-        url = "https://" + url
-
     parsed_base = urlparse(url)
     base_origin = f"{parsed_base.scheme}://{parsed_base.netloc}"
 
@@ -321,7 +310,6 @@ async def scrape(url: str) -> dict:
     session.headers.update(HEADERS)
 
     visited = set()
-    pages = []
     queue: list[tuple[str, int]] = [(url, 10)]
     # Track whether the site needs JS rendering
     needs_js_render = False
@@ -442,3 +430,31 @@ async def scrape(url: str) -> dict:
         "content": pages,
         "error": None,
     }
+
+
+async def scrape(url: str) -> dict:
+    """
+    Main entry point with a 45-second overall timeout.
+    Returns whatever pages were collected if the timeout is hit.
+    """
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+
+    pages: list = []
+    try:
+        return await asyncio.wait_for(_scrape_inner(url, pages), timeout=45)
+    except asyncio.TimeoutError:
+        print(f"Scrape timed out after 45s for {url} — returning {len(pages)} partial page(s)")
+        if pages:
+            return {
+                "base_url": url,
+                "pages_scraped": len(pages),
+                "content": pages,
+                "error": None,
+            }
+        return {
+            "base_url": url,
+            "pages_scraped": 0,
+            "content": [],
+            "error": "Scrape timed out before any content could be retrieved.",
+        }
