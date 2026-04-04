@@ -31,4 +31,4 @@ RUN playwright install --with-deps chromium || true
 COPY . .
 
 # Railway sets PORT env var
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
