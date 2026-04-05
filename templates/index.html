@@ -553,8 +553,15 @@
       font-size: 0.875rem;
       line-height: 1.75;
       color: var(--text-dim);
-      white-space: pre-wrap;
     }
+    .card-body .bullet-item { padding-left: 1.2em; position: relative; margin-bottom: 6px; line-height: 1.5; }
+    .card-body .bullet-item::before { content: "•"; position: absolute; left: 0; color: var(--green); font-weight: bold; }
+    .card-body .section-header { color: var(--green); font-weight: 600; margin-top: 12px; margin-bottom: 4px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-body .risk-high { color: #ef4444; font-weight: 700; }
+    .card-body .risk-medium { color: #f59e0b; font-weight: 700; }
+    .card-body .risk-low { color: #10b981; font-weight: 700; }
+    .card-body .deci-take { border-left: 3px solid var(--green); padding: 10px 12px; margin-top: 12px; background: rgba(16,185,129,0.06); border-radius: 0 6px 6px 0; font-style: italic; color: #d1d5db; line-height: 1.6; }
+    .card-body .deci-take-label { color: var(--green); font-weight: 700; font-style: normal; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
 
     .card--events .card-icon  { background: rgba(234,179,8,0.12); }
     .card--focus .card-icon   { background: rgba(16,185,129,0.1); }
@@ -1630,6 +1637,78 @@
       .replace(/"/g, "&quot;");
   }
 
+  function formatCardContent(text) {
+    if (!text) return "";
+
+    // Escape HTML entities first (security), then process formatting
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+    // Apply inline formatting: bold, risk badges
+    function inline(s) {
+      return s
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\[HIGH\]/g, '<span class="risk-high">[HIGH]</span>')
+        .replace(/\[MEDIUM\]/g, '<span class="risk-medium">[MEDIUM]</span>')
+        .replace(/\[LOW\]/g, '<span class="risk-low">[LOW]</span>');
+    }
+
+    const lines = escaped.split("\n");
+    const out = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // DECI TAKE block — collect until empty line or end
+      if (/^DECI TAKE\s*:/i.test(trimmed)) {
+        const afterLabel = trimmed.replace(/^DECI TAKE\s*:\s*/i, "");
+        const takeLines = afterLabel ? [afterLabel] : [];
+        i++;
+        while (i < lines.length && lines[i].trim() !== "") {
+          takeLines.push(lines[i].trim());
+          i++;
+        }
+        out.push(
+          `<div class="deci-take"><div class="deci-take-label">Deci Take</div>${inline(takeLines.join(" "))}</div>`
+        );
+        continue;
+      }
+
+      // Bullet points: lines starting with • or -
+      if (/^[•\-]\s/.test(trimmed)) {
+        const content = trimmed.replace(/^[•\-]\s+/, "");
+        out.push(`<div class="bullet-item">${inline(content)}</div>`);
+        i++;
+        continue;
+      }
+
+      // Section headers: short lines ending with colon
+      if (trimmed && trimmed.endsWith(":") && trimmed.length < 60) {
+        out.push(`<div class="section-header">${inline(trimmed)}</div>`);
+        i++;
+        continue;
+      }
+
+      // Empty line
+      if (trimmed === "") {
+        out.push("<br>");
+        i++;
+        continue;
+      }
+
+      // Regular line
+      out.push(inline(line) + "<br>");
+      i++;
+    }
+
+    return out.join("");
+  }
+
   function scoreColor(s) {
     const n = parseFloat(s);
     if (n >= 8) return "var(--green)";
@@ -1768,7 +1847,7 @@
           <div class="card-icon">${cfg.icon}</div>
           <div class="card-title">${cfg.title}</div>
         </div>
-        <div class="card-body">${escapeHtml(text)}</div>
+        <div class="card-body">${formatCardContent(text)}</div>
       `;
       cardsGrid.appendChild(card);
     });
