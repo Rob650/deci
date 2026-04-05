@@ -523,6 +523,8 @@
     .card--events:hover { border-color: rgba(234,179,8,0.45); }
     .card--risk { border-color: rgba(239,68,68,0.2); }
     .card--risk:hover { border-color: rgba(239,68,68,0.35); }
+    .card--intel { border-color: rgba(168,85,247,0.35); background: rgba(168,85,247,0.04); }
+    .card--intel:hover { border-color: rgba(168,85,247,0.6); }
 
     .card-header {
       display: flex;
@@ -564,9 +566,11 @@
     .card--comm .card-icon    { background: rgba(236,72,153,0.1); }
     .card--chain .card-icon   { background: rgba(20,184,166,0.1); }
     .card--risk .card-icon    { background: rgba(239,68,68,0.1); }
+    .card--intel .card-icon   { background: rgba(168,85,247,0.12); color: #c084fc; }
 
     .card--risk .card-body { color: #f0a3a3; }
     .card--events .card-body { color: #ddd; }
+    .card--intel .card-title  { color: #c084fc; letter-spacing: 0.03em; }
 
     /* ── Similar projects strip ── */
     #similar-section {
@@ -1339,6 +1343,7 @@
         <div class="step" id="step-4"><span class="step-dot"></span>Searching recent news &amp; events</div>
         <div class="step" id="step-5"><span class="step-dot"></span>Scanning Twitter/X mentions</div>
         <div class="step" id="step-6"><span class="step-dot"></span>Running deep AI analysis</div>
+        <div class="step" id="step-7"><span class="step-dot"></span>Comparing against library...</div>
       </div>
     </div>
 
@@ -1544,7 +1549,7 @@
     { key: "community_social",      title: "Community & Social",        icon: "◉", cls: "card--comm" },
     { key: "on_chain_metrics",      title: "On-Chain Metrics",          icon: "⛓", cls: "card--chain" },
     { key: "risk_assessment",       title: "Risk Assessment",           icon: "⚠", cls: "card--risk card-full" },
-    { key: "competitive_intel",     title: "Competitive Intelligence",  icon: "⊙", cls: "card--intel card-full" },
+    { key: "competitive_intel",     title: "VS. LIBRARY — Competitive Intelligence", icon: "⚔", cls: "card--intel card-full" },
   ];
 
   const SOURCE_LABELS = {
@@ -1569,7 +1574,7 @@
   const execText     = document.getElementById("exec-text");
   const downloadBtn  = document.getElementById("download-btn");
   const newBtn       = document.getElementById("new-analysis-btn");
-  const stepEls      = Array.from({ length: 7 }, (_, i) => document.getElementById(`step-${i}`));
+  const stepEls      = Array.from({ length: 8 }, (_, i) => document.getElementById(`step-${i}`));
   const similarSection = document.getElementById("similar-section");
   const similarGrid    = document.getElementById("similar-grid");
 
@@ -1788,7 +1793,7 @@
     collecting_sources: 1,
     analyzing:          6,
     saving:             6,
-    comparing:          6,
+    comparing:          7,
   };
 
   function setActiveStep(step) {

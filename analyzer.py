@@ -58,6 +58,8 @@ Produce a JSON report with EXACTLY these keys. ALL values must be plain strings 
 
   "tags": "comma-separated list of 3-8 relevant tags (e.g. 'ethereum, layer2, zk-rollup, privacy'). Lowercase, concise.",
 
+  "competitive_intel": "Auto-generated after analysis",
+
   "scores": {
     "team": <integer 1-10>,
     "technology": <integer 1-10>,
@@ -353,9 +355,7 @@ Write a competitive intelligence comparison covering:
 Be specific, direct, and data-driven. Reference scores and metrics. Format with clear headers."""
 
 
-LIBRARY_COMPARE_PROMPT = """You are Deci, an elite crypto/tech intelligence analyst.
-
-A new project has just been analyzed. Compare it against the existing project library to find competitive overlaps, unique differentiators, and market positioning.
+LIBRARY_COMPARE_PROMPT = """You are Deci, a crypto/tech project intelligence analyst. A new project has just been analyzed. Compare it against all existing projects in the research library to identify its competitive position.
 
 ## NEW PROJECT
 NEW_PROJECT_DATA
@@ -365,27 +365,27 @@ EXISTING_PROJECTS_DATA
 
 ---
 
-Return a JSON object with EXACTLY these keys. All values must be plain strings:
+Produce a structured competitive intelligence report with EXACTLY these four sections:
 
-{
-  "competitors": "Top direct competitors from the library. For each: • [Name] — [sector] — overlap: [specific area] — threat level: [LOW/MEDIUM/HIGH] — reason: [1 sentence]. If no direct competitors exist, say so explicitly.",
-  "unique_qualities": "What genuinely sets the new project apart from everything in the library? List 3-5 specific differentiators with evidence. If nothing is truly unique, state this directly.",
-  "market_position": "Where does the new project sit relative to the library? Is it a leader, fast-follower, niche player, or laggard in this space? Name the closest rival and explain the positioning gap.",
-  "overlap_areas": "Features, tech stacks, or markets the new project shares with existing library projects. Name the projects and the specific overlaps. If no overlaps, state this explicitly."
-}
+**UNIQUE STRENGTHS**
+What this project does that none of the library projects do. Be specific — name the differentiating feature, mechanism, or market position. If nothing is truly unique, say so honestly.
 
-Return ONLY valid JSON. No markdown fences, no preamble, no trailing text."""
+**DIRECT COMPETITORS**
+Which library projects are most similar and why. For each: name the project, explain the overlap (same sector, similar tech, same target market), and note the key similarity score.
+
+**COMPETITIVE ADVANTAGES**
+Where this project clearly wins vs. the library. Cite specific scores, metrics, or capabilities where it outperforms.
+
+**COMPETITIVE WEAKNESSES**
+Where library competitors are stronger. Cite specific scores, metrics, or capabilities where they outperform this project.
+
+Be direct and data-driven. Reference scores. If the library has no relevant comparisons, state that clearly."""
 
 
-def compare_against_library(new_project: dict, existing_projects: list[dict]) -> dict:
+def compare_against_library(new_project: dict, existing_projects: list[dict]) -> str:
     """Compare a newly analyzed project against all existing projects in the library."""
     if not existing_projects:
-        return {
-            "competitors": "No other projects in the library yet — this is the first project analyzed.",
-            "unique_qualities": "Unable to assess — no comparison baseline available in the library.",
-            "market_position": "No peers in the library to compare against yet.",
-            "overlap_areas": "No existing projects to compare against.",
-        }
+        return "No other projects in the library yet — re-run after adding more projects to see competitive intelligence."
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -393,7 +393,6 @@ def compare_against_library(new_project: dict, existing_projects: list[dict]) ->
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    # Build new project block
     scores = new_project.get("scores", {})
     analysis = new_project.get("analysis", {}) or new_project
     new_block = (
@@ -408,9 +407,8 @@ def compare_against_library(new_project: dict, existing_projects: list[dict]) ->
         f"Competitive Landscape: {str(analysis.get('competitive_landscape', 'N/A'))[:300]}"
     )
 
-    # Build existing projects block (cap at 20 to avoid token overload)
     lib_blocks = []
-    for p in existing_projects[:20]:
+    for p in existing_projects[:20]:  # cap at 20 to stay within token limits
         ps = p.get("scores", {})
         pa = p.get("analysis", {}) or {}
         lib_blocks.append(
@@ -435,37 +433,7 @@ def compare_against_library(new_project: dict, existing_projects: list[dict]) ->
         messages=[{"role": "user", "content": prompt}],
     )
 
-    raw = message.content[0].text.strip()
-    raw = re.sub(r"^```(?:json)?\s*", "", raw)
-    raw = re.sub(r"\s*```$", "", raw)
-
-    try:
-        result = json.loads(raw)
-    except json.JSONDecodeError:
-        match = re.search(r"\{[\s\S]*\}", raw)
-        if match:
-            try:
-                result = json.loads(match.group(0))
-            except json.JSONDecodeError:
-                result = {
-                    "competitors": raw[:500],
-                    "unique_qualities": "Parse error.",
-                    "market_position": "Parse error.",
-                    "overlap_areas": "Parse error.",
-                }
-        else:
-            result = {
-                "competitors": raw[:500],
-                "unique_qualities": "Parse error.",
-                "market_position": "Parse error.",
-                "overlap_areas": "Parse error.",
-            }
-
-    for key in ["competitors", "unique_qualities", "market_position", "overlap_areas"]:
-        if key not in result or not isinstance(result.get(key), str):
-            result[key] = str(result.get(key, "Not available."))
-
-    return result
+    return message.content[0].text.strip()
 
 
 def compare_projects(projects: list[dict]) -> str:

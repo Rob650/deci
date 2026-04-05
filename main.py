@@ -160,12 +160,7 @@ async def _run_job(job_id: str, url: str):
                 compare_against_library, new_project_for_compare, other_projects
             )
         except Exception as e:
-            competitive_intel = {
-                "competitors": f"Comparison unavailable: {str(e)}",
-                "unique_qualities": "Not available.",
-                "market_position": "Not available.",
-                "overlap_areas": "Not available.",
-            }
+            competitive_intel = f"Comparison unavailable: {str(e)}"
         report["competitive_intel"] = competitive_intel
 
         # Re-save project with competitive_intel included in analysis
@@ -195,6 +190,29 @@ async def _run_job(job_id: str, url: str):
             }
             for p in similar_raw
         ]
+
+        # Compare against entire library
+        job["step"] = "comparing"
+        all_projects = await get_all_projects()
+        other_projects = [p for p in all_projects if p.get("url") != url]
+        if other_projects:
+            try:
+                new_project_data = {
+                    "name": project_name,
+                    "sector": sector,
+                    "tags": tags,
+                    "scores": scores,
+                    "summary": summary,
+                    "analysis": report,
+                }
+                competitive_intel = await asyncio.to_thread(
+                    compare_against_library, new_project_data, other_projects
+                )
+                report["competitive_intel"] = competitive_intel
+            except Exception as e:
+                report["competitive_intel"] = f"Comparison unavailable: {str(e)}"
+        else:
+            report["competitive_intel"] = "No other projects in library yet — re-run after adding more projects to see competitive intelligence."
 
         # Build condensed source summary for the frontend
         source_summary: dict = {}
