@@ -765,6 +765,8 @@
       white-space: nowrap;
     }
     .lib-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+    .lib-btn--view { border-color: rgba(16,185,129,0.5); color: var(--green); background: rgba(16,185,129,0.08); }
+    .lib-btn--view:hover { border-color: var(--green); background: rgba(16,185,129,0.18); }
     .lib-btn--rescan { border-color: rgba(16,185,129,0.3); color: var(--green); }
     .lib-btn--rescan:hover { border-color: var(--green); background: rgba(16,185,129,0.08); }
 
@@ -1501,26 +1503,29 @@
 
     // Poll for job status
     async function poll() {
+      let jobData = null;
       try {
         const resp = await fetch(`/api/job/${jobId}`);
-        const data = await resp.json();
-
-        if (data.status === "running") {
-          if (data.step) setActiveStep(data.step);
-          return; // keep polling
-        }
-
-        stopPolling();
-        hideLoading();
-
-        if (data.status === "complete") {
-          renderResults(data.result);
-          loadLibraryData();
-        } else {
-          showError(data.detail || "An error occurred. Please try again.");
-        }
+        jobData = await resp.json();
       } catch (err) {
         // Network hiccup — keep polling silently
+        return;
+      }
+
+      if (jobData.status === "running") {
+        if (jobData.step) setActiveStep(jobData.step);
+        return; // keep polling
+      }
+
+      stopPolling();
+      hideLoading();
+
+      if (jobData.status === "complete") {
+        switchTab("analyze");
+        renderResults(jobData.result);
+        loadLibraryData();
+      } else {
+        showError(jobData.detail || "An error occurred. Please try again.");
       }
     }
 
@@ -1653,12 +1658,34 @@
       <div class="lib-card-footer">
         <div class="lib-card-date">${escapeHtml(date)}</div>
         <div class="lib-card-actions">
+          <button class="lib-btn lib-btn--view" data-id="${p.id}">View Report</button>
           <button class="lib-btn lib-btn--rescan" data-url="${escapeHtml(p.url)}" onclick="event.stopPropagation(); rescanProject(this.dataset.url)">Re-scan</button>
         </div>
       </div>
     `;
 
     card.addEventListener("click", () => toggleSelect(p.id));
+
+    card.querySelector(".lib-btn--view").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      try {
+        const resp = await fetch(`/api/project/${p.id}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const project = await resp.json();
+        switchTab("analyze");
+        renderResults({
+          url: project.url,
+          pages_scraped: "saved report",
+          report: project.analysis,
+          report_id: null,
+          sources: {},
+          similar_projects: [],
+        });
+      } catch (err) {
+        alert("Failed to load report.");
+      }
+    });
+
     return card;
   }
 
