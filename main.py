@@ -404,6 +404,30 @@ async def _run_virtuals_analyze_job(job_id: str, virtuals_id: str):
         analysis = await asyncio.to_thread(analyze_virtuals_agent, agent)
         await save_virtuals_agent({**agent, "analysis": analysis})
 
+        # Also save to the main projects table so it appears in the Research Library
+        virtuals_url = f"https://app.virtuals.io/virtuals/{virtuals_id}"
+        agent_name = agent.get("name") or virtuals_id
+        ticker = agent.get("ticker") or ""
+        innovation_score = analysis.get("innovation_score") if analysis else None
+        scores = {"innovation": innovation_score} if innovation_score is not None else {}
+        tags_parts = [ticker] if ticker else []
+        analysis_tags = analysis.get("tags", "") if analysis else ""
+        if analysis_tags:
+            tags_parts.append(analysis_tags)
+        tags_str = ", ".join(tags_parts)
+        sector = analysis.get("sector", "AI Agent") if analysis else "AI Agent"
+        summary = analysis.get("executive_summary", "") if analysis else ""
+        await save_project(
+            url=virtuals_url,
+            name=agent_name,
+            sector=sector,
+            tags=tags_str,
+            scores=scores,
+            analysis=analysis or {},
+            market_data={},
+            summary=summary,
+        )
+
         job["status"] = "complete"
         job["result"] = {"virtuals_id": virtuals_id, "analysis": analysis}
     except Exception as e:
