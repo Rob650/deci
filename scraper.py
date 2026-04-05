@@ -273,6 +273,76 @@ def follow_meta_refresh(html: str, base_url: str) -> str | None:
     return None
 
 
+IMPORTANT_SUBDOMAIN_PREFIXES = ["docs.", "whitepaper.", "app.", "wiki.", "learn.", "lite.", "paper."]
+SOCIAL_DOMAINS = ["twitter.com", "x.com", "discord.gg", "discord.com", "t.me", "telegram.me"]
+
+
+def _extract_important_links(html: str, base_url: str) -> list[tuple[str, int]]:
+    """Find links to subdomains, GitHub repos, social media, and key info pages.
+
+    Returns list of (absolute_url, priority_score) for URLs outside the main domain
+    that are likely to contain valuable project information.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    base_parsed = urlparse(base_url)
+    base_netloc = base_parsed.netloc
+    # Root domain without subdomains (e.g. "project.io" from "www.project.io")
+    parts = base_netloc.split(".")
+    root_domain = ".".join(parts[-2:]) if len(parts) >= 2 else base_netloc
+
+    results = []
+    seen = set()
+
+    for a in soup.find_all("a", href=True):
+        href = a["href"].strip()
+        if not href or href.startswith("mailto:") or href.startswith("tel:"):
+            continue
+        absolute = urljoin(base_url, href)
+        absolute = absolute.split("#")[0]
+        if not absolute or absolute in seen:
+            continue
+        if not is_likely_content_page(absolute):
+            continue
+
+        parsed = urlparse(absolute)
+        netloc = parsed.netloc
+
+        # Skip same domain — already handled by discover_links
+        if netloc == base_netloc:
+            continue
+
+        score = 0
+
+        # Subdomains of the same root domain (docs.project.io, app.project.io, etc.)
+        if root_domain in netloc and netloc != base_netloc:
+            for prefix in IMPORTANT_SUBDOMAIN_PREFIXES:
+                if netloc.startswith(prefix) or netloc.startswith("www." + prefix.rstrip(".")):
+                    score = 9
+                    break
+            if score == 0:
+                # Any other subdomain of the project's root domain
+                score = 7
+
+        # GitHub repos (org/repo level, not just github.com root)
+        elif "github.com" in netloc:
+            path_parts = [p for p in parsed.path.split("/") if p]
+            if len(path_parts) >= 2:
+                score = 8
+
+        # Social media / community
+        else:
+            for social in SOCIAL_DOMAINS:
+                if social in netloc:
+                    score = 4
+                    break
+
+        if score > 0:
+            seen.add(absolute)
+            results.append((absolute, score))
+
+    return results
+
+
 def discover_links(html: str, base_url: str) -> list[tuple[str, str, int]]:
     """Returns list of (absolute_url, link_text, score) sorted by score desc."""
     soup = BeautifulSoup(html, "html.parser")
@@ -412,6 +482,14 @@ async def _scrape_inner(url: str, pages: list) -> dict:
             for link_url, link_text, score in links:
                 if link_url not in visited:
                     queue.append((link_url, score))
+
+            # On the main page, also discover important external links:
+            # subdomains (docs.*, app.*), GitHub repos, social media
+            if current_url == url:
+                for ext_url, ext_score in _extract_important_links(raw, url):
+                    if ext_url not in visited:
+                        queue.append((ext_url, ext_score))
+
             queue.sort(key=lambda x: x[1], reverse=True)
 
         await asyncio.sleep(CRAWL_DELAY)

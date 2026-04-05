@@ -36,7 +36,7 @@ Produce a JSON report with EXACTLY these keys. ALL values must be plain strings 
 
   "project_focus": "Technical deep-dive covering ALL of the following you can determine from the data:\\n• Layer: L1 / L2 / L3 / application / infrastructure\\n• Consensus mechanism (PoS, PoW, PoA, DPoS, etc.) if applicable\\n• VM / execution environment (EVM-compatible, custom VM, WASM, etc.)\\n• Smart contract language (Solidity, Rust, Move, Cairo, etc.)\\n• Key protocol design choices (rollup type, data availability, sequencer model, etc.)\\n• Specific use cases with named examples (e.g. 'enables Uniswap-style AMM for X asset class')\\n• Claimed performance metrics (TPS, finality time, gas costs) — quote directly from website\\n• What is genuinely novel vs. what is copied from existing solutions\\n\\nDECI TAKE: [2-3 sentences of original analysis — how innovative is this tech really? Is it genuinely novel or derivative? What's the biggest technical risk?]",
 
-  "team": "For each team member you can identify:\\n• [Name] — [Title] — [Previous companies/projects with years] — [Education if stated] — [LinkedIn/Twitter if mentioned]\\nNote advisors and institutional backers with the same detail.\\nFlag any of these red flags if present: anonymous founders, LinkedIn profiles that don't check out, team members with failed/exit-scam history, advisors who are purely decorative, no verifiable track record.\\nIf team info is completely absent, state: 'Team is anonymous or undisclosed — HIGH risk flag.'\\n\\nDECI TAKE: [2-3 sentences — how does this team compare to competitors' teams? What's the biggest concern or strength?]",
+  "team": "For each team member you can identify:\\n• [Name] — [Title] — [Previous companies/projects with years] — [Education if stated] — [LinkedIn/Twitter if mentioned]\\nNote advisors and institutional backers with the same detail.\\nFlag any of these red flags if present: anonymous founders, LinkedIn profiles that don't check out, team members with failed/exit-scam history, advisors who are purely decorative, no verifiable track record.\\nIf team info is not found in the scraped content, state: 'Team information not found on scraped pages — may be available on docs, whitepaper, or subdomain pages not captured by our scraper. This is a DATA GAP, not necessarily a red flag. Score accordingly — default to 5 unless there is active evidence of deliberate anonymity or deception.'\\n\\nDECI TAKE: [2-3 sentences — how does this team compare to competitors' teams? What's the biggest concern or strength?]",
 
   "tokenomics": "Use CoinGecko data if available. Cover ALL of the following:\\n• Token ticker and network\\n• Total supply: [exact number]\\n• Circulating supply: [exact number] ([X]% of total)\\n• Max supply: [exact number or 'unlimited']\\n• Current price: [price] | Market cap: [amount] | FDV: [amount] | 24h volume: [amount]\\n• ATH: [price] — currently [X]% below ATH\\n• Distribution breakdown: Team [X]% (vesting: [schedule]), Investors [X]% (vesting: [schedule]), Community/Ecosystem [X]%, Foundation [X]%, Public sale [X]%\\n• Token utility: governance / fee payment / staking / burning / collateral — describe each mechanism\\n• Inflation rate or emission schedule\\n• Assessment: are tokenomics investor-friendly or concerning? Give specific reasoning.\\n\\nDECI TAKE: [2-3 sentences — are these tokenomics investor-friendly? What's the biggest red flag or green flag?]",
 
@@ -75,12 +75,14 @@ Produce a JSON report with EXACTLY these keys. ALL values must be plain strings 
   }
 }
 
-Scoring rubric (be honest — do not inflate):
+Scoring rubric (be honest — do not inflate, but also do not penalize for scraper limitations):
 - 9-10: Exceptional. Top-tier team/tech/metrics, clear differentiation, strong evidence.
 - 7-8: Strong. Above average with minor concerns backed by evidence.
-- 5-6: Average. Present but unremarkable, mixed signals, or data gaps.
-- 3-4: Below average. Notable weaknesses or red flags with specific evidence.
-- 1-2: Poor. Major problems, anonymous team, no traction, or critical data missing.
+- 5-6: Average OR data insufficient to properly assess. If key data is missing because our scraper couldn't find it (not because the project hides it), default to 5 — do NOT score below 5 purely for missing data. State what data is needed for a proper assessment.
+- 3-4: Below average. Notable weaknesses or red flags with SPECIFIC EVIDENCE from what WAS found.
+- 1-2: Poor. Major confirmed problems — evidence of scams, rug pulls, deliberate deception, or completely dead project with zero activity.
+
+CRITICAL SCORING RULE: A score below 5 MUST be justified by NEGATIVE evidence actually found, not by absence of data. "Team info not found on scraped pages" = score 5 with note "insufficient data." "Team found to have prior rug pull history" = score 2 with evidence. Missing data is neutral (5), not negative (1-2).
 
 Return ONLY valid JSON. No markdown fences, no preamble, no trailing text."""
 
