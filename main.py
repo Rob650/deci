@@ -20,7 +20,12 @@ from database import (
     get_all_projects,
     get_similar_projects,
     search_projects,
+    save_virtuals_agent,
+    get_virtuals_agent,
+    get_virtuals_agent_by_virtuals_id,
+    get_all_virtuals_agents,
 )
+from virtuals_scanner import scan_all_agents, analyze_virtuals_agent
 
 app = FastAPI(title="Deci", description="Crypto/Tech Project Intelligence Reports")
 
@@ -332,6 +337,104 @@ async def search(q: str = ""):
         }
         for p in results
     ])
+
+
+# ── Virtuals ──────────────────────────────────────────────────────────────────
+
+async def _run_virtuals_scan_job(job_id: str):
+    job = job_store[job_id]
+    try:
+        result = await scan_all_agents(job)
+        job["status"] = "complete"
+        job["result"] = result
+    except Exception as e:
+        job["status"] = "error"
+        job["detail"] = f"Scan failed: {str(e)}"
+
+
+async def _run_virtuals_analyze_job(job_id: str, virtuals_id: str):
+    job = job_store[job_id]
+    try:
+        agent = await get_virtuals_agent_by_virtuals_id(virtuals_id)
+        if not agent:
+            job["status"] = "error"
+            job["detail"] = "Agent not found."
+            return
+
+        job["step"] = "analyzing"
+        analysis = await asyncio.to_thread(analyze_virtuals_agent, agent)
+        await save_virtuals_agent({**agent, "analysis": analysis})
+
+        job["status"] = "complete"
+        job["result"] = {"virtuals_id": virtuals_id, "analysis": analysis}
+    except Exception as e:
+        job["status"] = "error"
+        job["detail"] = f"Analysis failed: {str(e)}"
+
+
+@app.get("/api/virtuals/agents")
+async def list_virtuals_agents():
+    agents = await get_all_virtuals_agents()
+    return JSONResponse([
+        {
+            "id": a["id"],
+            "virtuals_id": a["virtuals_id"],
+            "name": a["name"],
+            "ticker": a["ticker"],
+            "market_cap": a["market_cap"],
+            "tvl": a["tvl"],
+            "volume_24h": a["volume_24h"],
+            "price": a["price"],
+            "image_url": a["image_url"],
+            "innovation_score": (a.get("analysis") or {}).get("innovation_score"),
+            "last_scanned": a["last_scanned"],
+        }
+        for a in agents
+    ])
+
+
+@app.post("/api/virtuals/scan")
+async def virtuals_scan():
+    _cleanup_old_jobs()
+    job_id = str(uuid.uuid4())
+    job_store[job_id] = {
+        "status": "running",
+        "step": "fetching",
+        "step_detail": "Starting scan...",
+        "result": None,
+        "detail": None,
+        "created_at": datetime.datetime.utcnow(),
+    }
+    asyncio.create_task(_run_virtuals_scan_job(job_id))
+    return JSONResponse({"job_id": job_id, "status": "running"})
+
+
+@app.get("/api/virtuals/agent/{virtuals_id}")
+async def get_virtuals_agent_detail(virtuals_id: str):
+    agent = await get_virtuals_agent_by_virtuals_id(virtuals_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found.")
+    return JSONResponse(agent)
+
+
+@app.post("/api/virtuals/analyze/{virtuals_id}")
+async def virtuals_analyze_agent(virtuals_id: str):
+    agent = await get_virtuals_agent_by_virtuals_id(virtuals_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found.")
+
+    _cleanup_old_jobs()
+    job_id = str(uuid.uuid4())
+    job_store[job_id] = {
+        "status": "running",
+        "step": "analyzing",
+        "step_detail": f"Analyzing {agent.get('name', virtuals_id)}...",
+        "result": None,
+        "detail": None,
+        "created_at": datetime.datetime.utcnow(),
+    }
+    asyncio.create_task(_run_virtuals_analyze_job(job_id, virtuals_id))
+    return JSONResponse({"job_id": job_id, "status": "running"})
 
 
 @app.get("/health")

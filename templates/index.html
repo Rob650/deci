@@ -950,6 +950,285 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Virtuals tab ── */
+    .virtuals-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 20px 0 16px;
+      flex-wrap: wrap;
+    }
+    .virtuals-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-scan {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 9999px;
+      font-family: var(--font);
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 10px 24px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-scan:hover:not(:disabled) { background: #0ea572; }
+    .btn-scan:active:not(:disabled) { transform: scale(0.97); }
+    .btn-scan:disabled { background: var(--accent-dim); cursor: not-allowed; opacity: 0.7; }
+    .virtuals-scan-status {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .virtuals-scan-status strong { color: var(--accent); }
+    .virtuals-last-scanned {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .virtuals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .virtuals-card {
+      background: var(--surface);
+      border: 1px solid rgba(16,185,129,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .virtuals-card:hover { border-color: rgba(16,185,129,0.35); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .virtuals-card-img {
+      width: 100%;
+      height: 90px;
+      background: var(--surface-hi);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .virtuals-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .virtuals-card-img-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05));
+      border: 1px solid rgba(16,185,129,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .virtuals-card-body { padding: 12px 14px 14px; }
+    .virtuals-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .virtuals-card-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .virtuals-card-ticker {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 9999px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .virtuals-card-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 10px;
+    }
+    .virtuals-metric {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.74rem;
+    }
+    .virtuals-metric-label { color: var(--text-muted); }
+    .virtuals-metric-value { color: var(--text-dim); font-weight: 600; }
+    .virtuals-innovation-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.04em;
+    }
+    #virtuals-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    #virtuals-empty strong { display: block; font-size: 1.1rem; margin-bottom: 8px; color: var(--text-dim); }
+
+    /* ── Agent detail modal ── */
+    #agent-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    #agent-modal.open { display: flex; }
+    .agent-modal-content {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 16px;
+      max-width: 680px;
+      width: 95%;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 28px;
+      z-index: 1;
+    }
+    .agent-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+    .agent-modal-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .agent-modal-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .agent-modal-section {
+      margin-bottom: 18px;
+    }
+    .agent-modal-section-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .agent-modal-section-body {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+    }
+    .agent-modal-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .agent-modal-metric {
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .agent-modal-metric-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .agent-modal-metric-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .agent-modal-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.78rem;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 9999px;
+      padding: 5px 14px;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+    .agent-modal-link:hover { background: rgba(16,185,129,0.08); }
+    .agent-modal-analyze-btn {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 9999px;
+      color: var(--accent);
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+    .agent-modal-analyze-btn:hover { background: rgba(16,185,129,0.16); }
+    .agent-modal-analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .innovation-score-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-hi);
+      border: 1px solid rgba(16,185,129,0.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .innovation-score-number {
+      font-size: 2.2rem;
+      font-weight: 900;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .innovation-score-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .innovation-score-rationale {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
     /* ── Footer ── */
     footer {
       text-align: center;
@@ -1013,6 +1292,7 @@
   <nav class="tab-nav">
     <button class="tab-btn active" data-tab="analyze">Analyze</button>
     <button class="tab-btn" data-tab="library" id="library-tab-btn">Research Library</button>
+    <button class="tab-btn" data-tab="virtuals">Virtuals Agents</button>
   </nav>
 
   <!-- ══ ANALYZE TAB ══ -->
@@ -1140,7 +1420,61 @@
 
   </div><!-- /tab-library -->
 
+  <!-- ══ VIRTUALS TAB ══ -->
+  <div class="tab-panel" id="tab-virtuals">
+
+    <div class="virtuals-toolbar">
+      <div class="virtuals-toolbar-left">
+        <button class="btn-scan" id="virtuals-scan-btn">Scan Virtuals →</button>
+        <span class="virtuals-scan-status" id="virtuals-scan-status"></span>
+      </div>
+      <span class="virtuals-last-scanned" id="virtuals-last-scanned"></span>
+    </div>
+
+    <div class="virtuals-grid" id="virtuals-grid"></div>
+
+    <div id="virtuals-empty">
+      <strong>No agents yet</strong>
+      Click "Scan Virtuals" to fetch and analyze agents from the Virtuals Protocol.
+    </div>
+
+  </div><!-- /tab-virtuals -->
+
   <footer>DECI &mdash; POWERED BY CLAUDE &mdash; FOR RESEARCH PURPOSES ONLY</footer>
+</div>
+
+<!-- ── Agent detail modal ── -->
+<div id="agent-modal">
+  <div class="modal-backdrop" id="agent-modal-backdrop"></div>
+  <div class="agent-modal-content">
+    <div class="agent-modal-header">
+      <div class="agent-modal-title-row">
+        <span class="agent-modal-name" id="agent-modal-name"></span>
+        <span class="virtuals-card-ticker" id="agent-modal-ticker"></span>
+        <span class="virtuals-innovation-badge" id="agent-modal-score-badge"></span>
+      </div>
+      <button class="modal-close" id="agent-modal-close">&#x2715;</button>
+    </div>
+
+    <div class="agent-modal-metrics" id="agent-modal-metrics"></div>
+
+    <div id="agent-modal-analysis-wrap">
+      <div class="modal-spinner" id="agent-modal-spinner" style="display:none">
+        <div class="spinner"></div>
+        Running AI analysis…
+      </div>
+      <div id="agent-modal-analysis">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <a id="agent-modal-ext-link" class="agent-modal-link" href="#" target="_blank" rel="noopener">
+        View on Virtuals ↗
+      </a>
+      <button class="agent-modal-analyze-btn" id="agent-modal-analyze-btn">Run AI Analysis</button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Compare bar (fixed bottom) ── -->
@@ -1552,6 +1886,7 @@
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === `tab-${name}`));
     if (name === "library") loadLibraryData();
+    if (name === "virtuals") loadVirtualsData();
   }
 
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -1811,6 +2146,366 @@
 
   document.getElementById("modal-close").addEventListener("click", closeModal);
   document.getElementById("modal-backdrop").addEventListener("click", closeModal);
+
+  // ── Virtuals ───────────────────────────────────────────────────────────────
+  let allVirtualsAgents = [];
+  let virtualsJobId = null;
+  let virtualsJobPollTimer = null;
+
+  function fmtNum(n, prefix) {
+    if (n === null || n === undefined) return "N/A";
+    prefix = prefix !== undefined ? prefix : "$";
+    if (n >= 1e9) return prefix + (n / 1e9).toFixed(2) + "B";
+    if (n >= 1e6) return prefix + (n / 1e6).toFixed(2) + "M";
+    if (n >= 1e3) return prefix + (n / 1e3).toFixed(2) + "K";
+    if (n < 0.01 && n > 0) return prefix + n.toFixed(6);
+    return prefix + n.toFixed(4);
+  }
+
+  function innovationColor(score) {
+    if (score >= 8) return "var(--green)";
+    if (score >= 6) return "var(--amber)";
+    if (score >= 4) return "var(--orange)";
+    return "var(--red)";
+  }
+
+  function innovationBadgeHTML(score) {
+    if (!score && score !== 0) return "";
+    const color = innovationColor(score);
+    return `<span class="virtuals-innovation-badge" style="color:${color};background:${color}18;border:1px solid ${color}40">
+      ★ ${score}/10
+    </span>`;
+  }
+
+  async function loadVirtualsData() {
+    try {
+      const resp = await fetch("/api/virtuals/agents");
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      allVirtualsAgents = await resp.json();
+    } catch (e) {
+      // Keep existing data on error
+    }
+    renderVirtualsGrid();
+    updateVirtualsLastScanned();
+  }
+
+  function updateVirtualsLastScanned() {
+    const el = document.getElementById("virtuals-last-scanned");
+    if (!allVirtualsAgents.length) { el.textContent = ""; return; }
+    const latest = allVirtualsAgents
+      .map(a => a.last_scanned)
+      .filter(Boolean)
+      .sort()
+      .pop();
+    if (latest) {
+      const d = new Date(latest + (latest.endsWith("Z") ? "" : "Z"));
+      el.textContent = "Last scanned: " + d.toLocaleString();
+    }
+  }
+
+  function renderVirtualsGrid() {
+    const grid  = document.getElementById("virtuals-grid");
+    const empty = document.getElementById("virtuals-empty");
+    if (!allVirtualsAgents.length) {
+      grid.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    grid.innerHTML = "";
+    allVirtualsAgents.forEach(a => grid.appendChild(buildVirtualsCard(a)));
+  }
+
+  function buildVirtualsCard(a) {
+    const score = a.innovation_score;
+    const card = document.createElement("div");
+    card.className = "virtuals-card";
+    card.dataset.virtualsId = a.virtuals_id;
+
+    const imgHtml = a.image_url
+      ? `<img src="${escapeHtml(a.image_url)}" alt="${escapeHtml(a.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=virtuals-card-img-placeholder>${escapeHtml((a.name||'?')[0].toUpperCase())}</div>'">`
+      : `<div class="virtuals-card-img-placeholder">${escapeHtml((a.name || "?")[0].toUpperCase())}</div>`;
+
+    card.innerHTML = `
+      <div class="virtuals-card-img">${imgHtml}</div>
+      <div class="virtuals-card-body">
+        <div class="virtuals-card-top">
+          <div class="virtuals-card-name">${escapeHtml(a.name || "Unknown")}</div>
+          ${a.ticker ? `<div class="virtuals-card-ticker">$${escapeHtml(a.ticker)}</div>` : ""}
+        </div>
+        <div class="virtuals-card-metrics">
+          <div class="virtuals-metric">
+            <span class="virtuals-metric-label">Market Cap</span>
+            <span class="virtuals-metric-value">${fmtNum(a.market_cap)}</span>
+          </div>
+          <div class="virtuals-metric">
+            <span class="virtuals-metric-label">Vol 24h</span>
+            <span class="virtuals-metric-value">${fmtNum(a.volume_24h)}</span>
+          </div>
+          <div class="virtuals-metric">
+            <span class="virtuals-metric-label">Price</span>
+            <span class="virtuals-metric-value">${fmtNum(a.price)}</span>
+          </div>
+        </div>
+        ${score !== null && score !== undefined ? innovationBadgeHTML(score) : '<span style="font-size:0.72rem;color:var(--text-muted)">Not analyzed</span>'}
+      </div>
+    `;
+
+    card.addEventListener("click", () => openAgentModal(a));
+    return card;
+  }
+
+  // ── Virtuals scan ──
+  async function startVirtualsScan() {
+    const btn = document.getElementById("virtuals-scan-btn");
+    const status = document.getElementById("virtuals-scan-status");
+    btn.disabled = true;
+    btn.textContent = "Scanning…";
+    status.innerHTML = "<strong>Fetching agents from Virtuals API…</strong>";
+
+    try {
+      const resp = await fetch("/api/virtuals/scan", { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok) {
+        btn.disabled = false;
+        btn.textContent = "Scan Virtuals →";
+        status.textContent = data.detail || "Scan failed.";
+        return;
+      }
+      virtualsJobId = data.job_id;
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "Scan Virtuals →";
+      status.textContent = "Network error. Please try again.";
+      return;
+    }
+
+    virtualsJobPollTimer = setInterval(pollVirtualsScan, 3000);
+    setTimeout(pollVirtualsScan, 1000);
+  }
+
+  async function pollVirtualsScan() {
+    if (!virtualsJobId) return;
+    const btn = document.getElementById("virtuals-scan-btn");
+    const status = document.getElementById("virtuals-scan-status");
+
+    let data;
+    try {
+      const resp = await fetch(`/api/job/${virtualsJobId}`);
+      data = await resp.json();
+    } catch (e) {
+      return; // keep polling on network hiccup
+    }
+
+    if (data.status === "running") {
+      const detail = data.step_detail || data.step || "Working…";
+      status.innerHTML = `<strong>${escapeHtml(detail)}</strong>`;
+      return;
+    }
+
+    clearInterval(virtualsJobPollTimer);
+    virtualsJobPollTimer = null;
+    virtualsJobId = null;
+    btn.disabled = false;
+    btn.textContent = "Scan Virtuals →";
+
+    if (data.status === "complete") {
+      const r = data.result || {};
+      status.innerHTML = `<strong>Done!</strong> ${r.total_fetched || 0} fetched, ${r.total_analyzed || 0} analyzed.`;
+      await loadVirtualsData();
+    } else {
+      status.textContent = data.detail || "Scan failed.";
+    }
+  }
+
+  document.getElementById("virtuals-scan-btn").addEventListener("click", startVirtualsScan);
+
+  // ── Agent detail modal ──
+  let currentAgentData = null;
+  let agentAnalyzeJobId = null;
+  let agentAnalyzePollTimer = null;
+
+  function openAgentModal(agent) {
+    currentAgentData = agent;
+    agentAnalyzeJobId = null;
+    clearInterval(agentAnalyzePollTimer);
+
+    document.getElementById("agent-modal-name").textContent = agent.name || "Unknown";
+    document.getElementById("agent-modal-ticker").textContent = agent.ticker ? "$" + agent.ticker : "";
+
+    const scoreBadge = document.getElementById("agent-modal-score-badge");
+    if (agent.innovation_score !== null && agent.innovation_score !== undefined) {
+      const color = innovationColor(agent.innovation_score);
+      scoreBadge.textContent = "★ " + agent.innovation_score + "/10";
+      scoreBadge.style.cssText = `color:${color};background:${color}18;border:1px solid ${color}40`;
+    } else {
+      scoreBadge.textContent = "";
+      scoreBadge.style.cssText = "";
+    }
+
+    // Metrics
+    document.getElementById("agent-modal-metrics").innerHTML = `
+      <div class="agent-modal-metric">
+        <div class="agent-modal-metric-label">Market Cap</div>
+        <div class="agent-modal-metric-value">${fmtNum(agent.market_cap)}</div>
+      </div>
+      <div class="agent-modal-metric">
+        <div class="agent-modal-metric-label">Volume 24h</div>
+        <div class="agent-modal-metric-value">${fmtNum(agent.volume_24h)}</div>
+      </div>
+      <div class="agent-modal-metric">
+        <div class="agent-modal-metric-label">Price</div>
+        <div class="agent-modal-metric-value">${fmtNum(agent.price)}</div>
+      </div>
+    `;
+
+    // External link
+    document.getElementById("agent-modal-ext-link").href =
+      "https://app.virtuals.io/virtuals/" + encodeURIComponent(agent.virtuals_id);
+
+    // Render analysis if available, else show prompt to analyze
+    renderAgentAnalysis(agent);
+
+    document.getElementById("agent-modal").classList.add("open");
+  }
+
+  function renderAgentAnalysis(agent) {
+    const wrap = document.getElementById("agent-modal-analysis");
+    const analyzeBtn = document.getElementById("agent-modal-analyze-btn");
+
+    // Fetch fresh analysis from API
+    fetch(`/api/virtuals/agent/${encodeURIComponent(agent.virtuals_id)}`)
+      .then(r => r.json())
+      .then(full => {
+        const analysis = full.analysis || {};
+        if (!analysis.what_it_does) {
+          wrap.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);padding:8px 0;">No analysis yet. Click "Run AI Analysis" to generate an intelligence report.</p>`;
+          analyzeBtn.disabled = false;
+          analyzeBtn.textContent = "Run AI Analysis";
+          return;
+        }
+
+        const score = analysis.innovation_score;
+
+        let html = "";
+        if (score) {
+          const color = innovationColor(score);
+          html += `<div class="innovation-score-display">
+            <div class="innovation-score-number" style="color:${color}">${score}</div>
+            <div>
+              <div class="innovation-score-label">Innovation Score</div>
+              <div class="innovation-score-rationale">${escapeHtml(analysis.innovation_score_rationale || "")}</div>
+            </div>
+          </div>`;
+        }
+
+        const sections = [
+          { key: "what_it_does",           title: "What It Does" },
+          { key: "unique_value_prop",       title: "Unique Value Proposition" },
+          { key: "market_position",         title: "Market Position" },
+          { key: "risk_assessment",         title: "Risk Assessment" },
+        ];
+        sections.forEach(({ key, title }) => {
+          const val = analysis[key];
+          if (!val) return;
+          html += `<div class="agent-modal-section">
+            <div class="agent-modal-section-title">${title}</div>
+            <div class="agent-modal-section-body">${escapeHtml(val)}</div>
+          </div>`;
+        });
+
+        wrap.innerHTML = html;
+        analyzeBtn.textContent = "Re-analyze";
+        analyzeBtn.disabled = false;
+
+        // Update score badge with fresh data
+        if (score !== undefined) {
+          const color = innovationColor(score);
+          const badge = document.getElementById("agent-modal-score-badge");
+          badge.textContent = "★ " + score + "/10";
+          badge.style.cssText = `color:${color};background:${color}18;border:1px solid ${color}40`;
+        }
+      })
+      .catch(() => {
+        wrap.innerHTML = `<p style="font-size:0.85rem;color:var(--text-muted);">Could not load agent details.</p>`;
+        analyzeBtn.disabled = false;
+      });
+  }
+
+  document.getElementById("agent-modal-analyze-btn").addEventListener("click", async () => {
+    if (!currentAgentData) return;
+    const btn = document.getElementById("agent-modal-analyze-btn");
+    const spinner = document.getElementById("agent-modal-spinner");
+    const wrap = document.getElementById("agent-modal-analysis");
+    btn.disabled = true;
+    btn.textContent = "Analyzing…";
+    spinner.style.display = "flex";
+    wrap.innerHTML = "";
+
+    try {
+      const resp = await fetch(`/api/virtuals/analyze/${encodeURIComponent(currentAgentData.virtuals_id)}`, { method: "POST" });
+      const data = await resp.json();
+      if (!resp.ok) {
+        spinner.style.display = "none";
+        wrap.innerHTML = `<p style="color:var(--red);font-size:0.85rem;">${escapeHtml(data.detail || "Analysis failed.")}</p>`;
+        btn.disabled = false;
+        btn.textContent = "Retry";
+        return;
+      }
+      agentAnalyzeJobId = data.job_id;
+    } catch (err) {
+      spinner.style.display = "none";
+      wrap.innerHTML = `<p style="color:var(--red);font-size:0.85rem;">Network error.</p>`;
+      btn.disabled = false;
+      btn.textContent = "Retry";
+      return;
+    }
+
+    agentAnalyzePollTimer = setInterval(pollAgentAnalyze, 3000);
+    setTimeout(pollAgentAnalyze, 1000);
+  });
+
+  async function pollAgentAnalyze() {
+    if (!agentAnalyzeJobId) return;
+    const btn = document.getElementById("agent-modal-analyze-btn");
+    const spinner = document.getElementById("agent-modal-spinner");
+    const wrap = document.getElementById("agent-modal-analysis");
+
+    let data;
+    try {
+      const resp = await fetch(`/api/job/${agentAnalyzeJobId}`);
+      data = await resp.json();
+    } catch (e) {
+      return;
+    }
+
+    if (data.status === "running") return;
+
+    clearInterval(agentAnalyzePollTimer);
+    agentAnalyzePollTimer = null;
+    spinner.style.display = "none";
+
+    if (data.status === "complete") {
+      agentAnalyzeJobId = null;
+      renderAgentAnalysis(currentAgentData);
+      // Refresh grid card
+      await loadVirtualsData();
+    } else {
+      wrap.innerHTML = `<p style="color:var(--red);font-size:0.85rem;">${escapeHtml(data.detail || "Analysis failed.")}</p>`;
+      btn.disabled = false;
+      btn.textContent = "Retry";
+    }
+  }
+
+  function closeAgentModal() {
+    document.getElementById("agent-modal").classList.remove("open");
+    clearInterval(agentAnalyzePollTimer);
+    agentAnalyzePollTimer = null;
+    currentAgentData = null;
+  }
+
+  document.getElementById("agent-modal-close").addEventListener("click", closeAgentModal);
+  document.getElementById("agent-modal-backdrop").addEventListener("click", closeAgentModal);
 
   // ── Init ───────────────────────────────────────────────────────────────────
   // Load library data on first visit to library tab (or preload on page load)

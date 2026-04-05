@@ -25,6 +25,25 @@ async def init_db():
                 updated_at  DATETIME
             )
         """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS virtuals_agents (
+                id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                virtuals_id           TEXT UNIQUE,
+                name                  TEXT,
+                ticker                TEXT,
+                description           TEXT,
+                market_cap            REAL,
+                tvl                   REAL,
+                volume_24h            REAL,
+                price                 REAL,
+                contract_address      TEXT,
+                image_url             TEXT,
+                analysis_json         TEXT,
+                competitive_intel_json TEXT,
+                last_scanned          DATETIME,
+                created_at            DATETIME
+            )
+        """)
         await db.commit()
 
 
@@ -154,7 +173,109 @@ async def search_projects(query: str) -> list[dict]:
         return [_row_to_dict(r) for r in rows]
 
 
+# ── Virtuals agents ──────────────────────────────────────────────────────────
+
+async def save_virtuals_agent(agent: dict) -> int:
+    """Insert or update a virtuals agent. Pass analysis=dict to store analysis."""
+    now = datetime.datetime.utcnow().isoformat()
+    analysis = agent.get("analysis")
+    competitive_intel = agent.get("competitive_intel")
+
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            "SELECT id FROM virtuals_agents WHERE virtuals_id = ?",
+            (agent["virtuals_id"],),
+        )
+        existing = await cursor.fetchone()
+
+        if existing:
+            await db.execute(
+                """
+                UPDATE virtuals_agents
+                SET name=?, ticker=?, description=?, market_cap=?, tvl=?,
+                    volume_24h=?, price=?, contract_address=?, image_url=?,
+                    analysis_json=COALESCE(?, analysis_json),
+                    competitive_intel_json=COALESCE(?, competitive_intel_json),
+                    last_scanned=?
+                WHERE virtuals_id=?
+                """,
+                (
+                    agent.get("name"), agent.get("ticker"), agent.get("description"),
+                    agent.get("market_cap"), agent.get("tvl"), agent.get("volume_24h"),
+                    agent.get("price"), agent.get("contract_address"), agent.get("image_url"),
+                    json.dumps(analysis) if analysis is not None else None,
+                    json.dumps(competitive_intel) if competitive_intel is not None else None,
+                    now,
+                    agent["virtuals_id"],
+                ),
+            )
+            await db.commit()
+            return existing[0]
+        else:
+            cursor = await db.execute(
+                """
+                INSERT INTO virtuals_agents
+                    (virtuals_id, name, ticker, description, market_cap, tvl,
+                     volume_24h, price, contract_address, image_url,
+                     analysis_json, competitive_intel_json, last_scanned, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    agent["virtuals_id"], agent.get("name"), agent.get("ticker"),
+                    agent.get("description"), agent.get("market_cap"), agent.get("tvl"),
+                    agent.get("volume_24h"), agent.get("price"),
+                    agent.get("contract_address"), agent.get("image_url"),
+                    json.dumps(analysis) if analysis is not None else None,
+                    json.dumps(competitive_intel) if competitive_intel is not None else None,
+                    now, now,
+                ),
+            )
+            await db.commit()
+            return cursor.lastrowid
+
+
+async def get_virtuals_agent(agent_id: int) -> Optional[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM virtuals_agents WHERE id = ?", (agent_id,)
+        )
+        row = await cursor.fetchone()
+        return _virtuals_row_to_dict(row) if row else None
+
+
+async def get_virtuals_agent_by_virtuals_id(virtuals_id: str) -> Optional[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM virtuals_agents WHERE virtuals_id = ?", (virtuals_id,)
+        )
+        row = await cursor.fetchone()
+        return _virtuals_row_to_dict(row) if row else None
+
+
+async def get_all_virtuals_agents() -> list[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT * FROM virtuals_agents ORDER BY volume_24h DESC NULLS LAST"
+        )
+        rows = await cursor.fetchall()
+        return [_virtuals_row_to_dict(r) for r in rows]
+
+
 # ── helpers ──────────────────────────────────────────────────────────────────
+
+def _virtuals_row_to_dict(row) -> dict:
+    d = dict(row)
+    for raw_key in ("analysis_json", "competitive_intel_json"):
+        clean_key = raw_key.replace("_json", "")
+        try:
+            d[clean_key] = json.loads(d.pop(raw_key) or "null") or {}
+        except (json.JSONDecodeError, TypeError):
+            d[clean_key] = {}
+    return d
+
 
 def _row_to_dict(row) -> dict:
     d = dict(row)
