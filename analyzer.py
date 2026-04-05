@@ -353,6 +353,121 @@ Write a competitive intelligence comparison covering:
 Be specific, direct, and data-driven. Reference scores and metrics. Format with clear headers."""
 
 
+LIBRARY_COMPARE_PROMPT = """You are Deci, an elite crypto/tech intelligence analyst.
+
+A new project has just been analyzed. Compare it against the existing project library to find competitive overlaps, unique differentiators, and market positioning.
+
+## NEW PROJECT
+NEW_PROJECT_DATA
+
+## EXISTING LIBRARY (EXISTING_PROJECT_COUNT projects)
+EXISTING_PROJECTS_DATA
+
+---
+
+Return a JSON object with EXACTLY these keys. All values must be plain strings:
+
+{
+  "competitors": "Top direct competitors from the library. For each: • [Name] — [sector] — overlap: [specific area] — threat level: [LOW/MEDIUM/HIGH] — reason: [1 sentence]. If no direct competitors exist, say so explicitly.",
+  "unique_qualities": "What genuinely sets the new project apart from everything in the library? List 3-5 specific differentiators with evidence. If nothing is truly unique, state this directly.",
+  "market_position": "Where does the new project sit relative to the library? Is it a leader, fast-follower, niche player, or laggard in this space? Name the closest rival and explain the positioning gap.",
+  "overlap_areas": "Features, tech stacks, or markets the new project shares with existing library projects. Name the projects and the specific overlaps. If no overlaps, state this explicitly."
+}
+
+Return ONLY valid JSON. No markdown fences, no preamble, no trailing text."""
+
+
+def compare_against_library(new_project: dict, existing_projects: list[dict]) -> dict:
+    """Compare a newly analyzed project against all existing projects in the library."""
+    if not existing_projects:
+        return {
+            "competitors": "No other projects in the library yet — this is the first project analyzed.",
+            "unique_qualities": "Unable to assess — no comparison baseline available in the library.",
+            "market_position": "No peers in the library to compare against yet.",
+            "overlap_areas": "No existing projects to compare against.",
+        }
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY not set.")
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    # Build new project block
+    scores = new_project.get("scores", {})
+    analysis = new_project.get("analysis", {}) or new_project
+    new_block = (
+        f"Name: {new_project.get('name', 'Unknown')} | URL: {new_project.get('url', 'N/A')}\n"
+        f"Sector: {new_project.get('sector', 'Unknown')} | Tags: {new_project.get('tags', 'N/A')}\n"
+        f"Scores — Team: {scores.get('team','N/A')}, Technology: {scores.get('technology','N/A')}, "
+        f"Tokenomics: {scores.get('tokenomics','N/A')}, Community: {scores.get('community','N/A')}, "
+        f"Execution: {scores.get('execution','N/A')}, Overall: {scores.get('overall','N/A')}\n"
+        f"Summary: {new_project.get('summary') or new_project.get('executive_summary', 'N/A')}\n"
+        f"Technology: {str(analysis.get('project_focus', 'N/A'))[:400]}\n"
+        f"Unique Value: {str(analysis.get('unique_value_proposition', 'N/A'))[:300]}\n"
+        f"Competitive Landscape: {str(analysis.get('competitive_landscape', 'N/A'))[:300]}"
+    )
+
+    # Build existing projects block (cap at 20 to avoid token overload)
+    lib_blocks = []
+    for p in existing_projects[:20]:
+        ps = p.get("scores", {})
+        pa = p.get("analysis", {}) or {}
+        lib_blocks.append(
+            f"• {p.get('name', 'Unknown')} ({p.get('url', '')})\n"
+            f"  Sector: {p.get('sector', 'Unknown')} | Tags: {p.get('tags', 'N/A')}\n"
+            f"  Scores: Team {ps.get('team','?')}, Tech {ps.get('technology','?')}, Overall {ps.get('overall','?')}\n"
+            f"  Summary: {str(p.get('summary', 'N/A'))[:200]}\n"
+            f"  Technology: {str(pa.get('project_focus', 'N/A'))[:200]}"
+        )
+
+    prompt = (
+        LIBRARY_COMPARE_PROMPT
+        .replace("NEW_PROJECT_DATA", new_block)
+        .replace("EXISTING_PROJECT_COUNT", str(len(existing_projects)))
+        .replace("EXISTING_PROJECTS_DATA", "\n\n".join(lib_blocks))
+    )
+
+    message = client.messages.create(
+        model=MODEL,
+        max_tokens=2000,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    raw = message.content[0].text.strip()
+    raw = re.sub(r"^```(?:json)?\s*", "", raw)
+    raw = re.sub(r"\s*```$", "", raw)
+
+    try:
+        result = json.loads(raw)
+    except json.JSONDecodeError:
+        match = re.search(r"\{[\s\S]*\}", raw)
+        if match:
+            try:
+                result = json.loads(match.group(0))
+            except json.JSONDecodeError:
+                result = {
+                    "competitors": raw[:500],
+                    "unique_qualities": "Parse error.",
+                    "market_position": "Parse error.",
+                    "overlap_areas": "Parse error.",
+                }
+        else:
+            result = {
+                "competitors": raw[:500],
+                "unique_qualities": "Parse error.",
+                "market_position": "Parse error.",
+                "overlap_areas": "Parse error.",
+            }
+
+    for key in ["competitors", "unique_qualities", "market_position", "overlap_areas"]:
+        if key not in result or not isinstance(result.get(key), str):
+            result[key] = str(result.get(key, "Not available."))
+
+    return result
+
+
 def compare_projects(projects: list[dict]) -> str:
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:

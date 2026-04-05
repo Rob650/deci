@@ -10,7 +10,7 @@ from pydantic import BaseModel
 import uvicorn
 
 from scraper import scrape
-from analyzer import analyze, compare_projects
+from analyzer import analyze, compare_against_library, compare_projects
 from data_sources import collect_all_sources
 from report_generator import generate_pdf_report
 from database import (
@@ -142,6 +142,44 @@ async def _run_job(job_id: str, url: str):
             summary=summary,
         )
 
+        # Auto cross-comparison against all library projects
+        job["step"] = "comparing"
+        all_projects = await get_all_projects()
+        other_projects = [p for p in all_projects if p["url"] != url]
+        new_project_for_compare = {
+            "name": project_name,
+            "url": url,
+            "sector": sector,
+            "tags": tags,
+            "scores": scores,
+            "summary": summary,
+            "analysis": report,
+        }
+        try:
+            competitive_intel = await asyncio.to_thread(
+                compare_against_library, new_project_for_compare, other_projects
+            )
+        except Exception as e:
+            competitive_intel = {
+                "competitors": f"Comparison unavailable: {str(e)}",
+                "unique_qualities": "Not available.",
+                "market_position": "Not available.",
+                "overlap_areas": "Not available.",
+            }
+        report["competitive_intel"] = competitive_intel
+
+        # Re-save project with competitive_intel included in analysis
+        await save_project(
+            url=url,
+            name=project_name,
+            sector=sector,
+            tags=tags,
+            scores=scores,
+            analysis=report,
+            market_data=market_data,
+            summary=summary,
+        )
+
         # Fetch similar projects for competitive context
         similar_raw = await get_similar_projects(sector, tags, exclude_url=url)
         similar_projects = [
@@ -176,6 +214,7 @@ async def _run_job(job_id: str, url: str):
             "sources": source_summary,
             "report": report,
             "similar_projects": similar_projects,
+            "competitive_intel": competitive_intel,
         }
 
     except asyncio.TimeoutError:

@@ -1544,6 +1544,7 @@
     { key: "community_social",      title: "Community & Social",        icon: "◉", cls: "card--comm" },
     { key: "on_chain_metrics",      title: "On-Chain Metrics",          icon: "⛓", cls: "card--chain" },
     { key: "risk_assessment",       title: "Risk Assessment",           icon: "⚠", cls: "card--risk card-full" },
+    { key: "competitive_intel",     title: "Competitive Intelligence",  icon: "⊙", cls: "card--intel card-full" },
   ];
 
   const SOURCE_LABELS = {
@@ -1778,6 +1779,7 @@
     collecting_sources: "Collecting data sources...",
     analyzing:          "Running AI analysis...",
     saving:             "Saving results...",
+    comparing:          "Comparing against library...",
   };
 
   // Map backend step names to the step element indices for highlighting
@@ -1786,6 +1788,7 @@
     collecting_sources: 1,
     analyzing:          6,
     saving:             6,
+    comparing:          6,
   };
 
   function setActiveStep(step) {
