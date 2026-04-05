@@ -254,6 +254,14 @@ async def get_virtuals_agent_by_virtuals_id(virtuals_id: str) -> Optional[dict]:
         return _virtuals_row_to_dict(row) if row else None
 
 
+async def get_all_virtuals_ids() -> set[str]:
+    """Return the set of all virtuals_id values currently in the database."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("SELECT virtuals_id FROM virtuals_agents")
+        rows = await cursor.fetchall()
+        return {row[0] for row in rows}
+
+
 async def get_all_virtuals_agents() -> list[dict]:
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row

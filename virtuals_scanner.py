@@ -8,6 +8,18 @@ import anthropic
 VIRTUALS_API_BASE = "https://api2.virtuals.io/api/virtuals"
 MODEL = "claude-sonnet-4-20250514"
 
+BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://app.virtuals.io/",
+    "Origin": "https://app.virtuals.io",
+}
+
 VIRTUALS_SYSTEM_PROMPT = """You are Deci, an elite AI agent intelligence analyst.
 You analyze AI agents from the Virtuals Protocol platform.
 You produce structured, honest reports on these agents.
@@ -90,18 +102,24 @@ def _extract_image_url(attrs: dict) -> str:
     return img_attrs.get("url", "")
 
 
-async def fetch_all_virtuals_agents() -> list[dict]:
-    """Paginate through the Virtuals API and return all agent records."""
-    all_agents = []
-    page = 1
-    page_size = 100
+async def fetch_all_virtuals_agents(
+    sort: str = "volume24h:desc",
+    max_pages: int = 10,
+) -> list[dict]:
+    """Paginate through the Virtuals API and return agent records.
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        while True:
+    Uses browser headers and per-request retry logic (3 attempts, exponential
+    backoff) so Railway cannot hang indefinitely.
+    """
+    all_agents = []
+    page_size = 100
+    timeout = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=5.0)
+
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        for page in range(1, max_pages + 1):
             params = {
                 "filters[status]": "5",
-                "sort[0]": "volume24h:desc",
-                "sort[1]": "createdAt:desc",
+                "sort[0]": sort,
                 "populate[0]": "image",
                 "populate[1]": "genesis",
                 "populate[2]": "vibesInfo",
@@ -109,12 +127,28 @@ async def fetch_all_virtuals_agents() -> list[dict]:
                 "pagination[page]": str(page),
                 "pagination[pageSize]": str(page_size),
             }
-            try:
-                resp = await client.get(VIRTUALS_API_BASE, params=params)
-                resp.raise_for_status()
-                data = resp.json()
-            except Exception as e:
-                print(f"[virtuals] Error fetching page {page}: {e}", flush=True)
+
+            data = None
+            for attempt in range(3):
+                try:
+                    resp = await client.get(
+                        VIRTUALS_API_BASE,
+                        params=params,
+                        headers=BROWSER_HEADERS,
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    break
+                except Exception as e:
+                    print(
+                        f"[virtuals] Page {page} attempt {attempt + 1}/3 failed: {e}",
+                        flush=True,
+                    )
+                    if attempt < 2:
+                        await asyncio.sleep(2 ** attempt)  # 1s, 2s
+
+            if data is None:
+                print(f"[virtuals] Aborting after page {page - 1} — API unreachable.", flush=True)
                 break
 
             items = data.get("data", [])
@@ -128,9 +162,68 @@ async def fetch_all_virtuals_agents() -> list[dict]:
             print(f"[virtuals] Fetched page {page}/{total_pages} ({len(items)} agents)", flush=True)
             if page >= total_pages:
                 break
-            page += 1
 
     return all_agents
+
+
+async def preload_virtuals_agents() -> dict:
+    """Fetch top 1000 agents by market cap and store basic data (no Claude analysis).
+
+    Intended to run at startup so the Virtuals tab is pre-populated without
+    burning API tokens on 1000 Claude calls.
+    """
+    from database import save_virtuals_agent, get_all_virtuals_ids
+
+    print("[virtuals] Starting startup preload (top 1000 by market cap)...", flush=True)
+    raw_agents = await fetch_all_virtuals_agents(sort="mcap:desc", max_pages=10)
+
+    existing_ids = await get_all_virtuals_ids()
+    new_count = 0
+    updated_count = 0
+
+    for raw in raw_agents:
+        agent = scan_single_agent(raw)
+        try:
+            is_new = agent["virtuals_id"] not in existing_ids
+            await save_virtuals_agent(agent)
+            if is_new:
+                new_count += 1
+            else:
+                updated_count += 1
+        except Exception as e:
+            print(f"[virtuals] Preload error saving {agent.get('name')}: {e}", flush=True)
+
+    print(
+        f"[virtuals] Preload complete: {new_count} new, {updated_count} updated, "
+        f"{len(raw_agents)} total fetched",
+        flush=True,
+    )
+    return {"new": new_count, "updated": updated_count, "total": len(raw_agents)}
+
+
+async def daily_scan_new_agents() -> dict:
+    """Fetch latest agents and add only new ones to the database."""
+    from database import save_virtuals_agent, get_all_virtuals_ids
+
+    print("[daily-scan] Checking for new Virtuals agents...", flush=True)
+    existing_ids = await get_all_virtuals_ids()
+    raw_agents = await fetch_all_virtuals_agents(sort="mcap:desc", max_pages=10)
+
+    new_count = 0
+    for raw in raw_agents:
+        agent = scan_single_agent(raw)
+        if agent["virtuals_id"] not in existing_ids:
+            try:
+                await save_virtuals_agent(agent)
+                new_count += 1
+            except Exception as e:
+                print(f"[daily-scan] Error saving {agent.get('name')}: {e}", flush=True)
+
+    print(
+        f"[daily-scan] Done: {new_count} new agents found out of {len(raw_agents)} fetched",
+        flush=True,
+    )
+    return {"new": new_count, "total_fetched": len(raw_agents)}
 
 
 def scan_single_agent(agent_data: dict) -> dict:

@@ -25,7 +25,7 @@ from database import (
     get_virtuals_agent_by_virtuals_id,
     get_all_virtuals_agents,
 )
-from virtuals_scanner import scan_all_agents, analyze_virtuals_agent
+from virtuals_scanner import scan_all_agents, analyze_virtuals_agent, preload_virtuals_agents, daily_scan_new_agents
 
 app = FastAPI(title="Deci", description="Crypto/Tech Project Intelligence Reports")
 
@@ -53,6 +53,26 @@ def _cleanup_old_jobs():
         job_store.pop(jid, None)
 
 
+async def _preload_virtuals_on_startup():
+    """Background: preload Virtuals agents on boot (no Claude analysis)."""
+    try:
+        result = await preload_virtuals_agents()
+        print(f"[startup] Virtuals preload done: {result}", flush=True)
+    except Exception as e:
+        print(f"[startup] Virtuals preload failed: {e}", flush=True)
+
+
+async def _daily_virtuals_scan_loop():
+    """Background loop: check for new Virtuals agents every 24 hours."""
+    while True:
+        await asyncio.sleep(24 * 60 * 60)
+        try:
+            result = await daily_scan_new_agents()
+            print(f"[daily-scan] Result: {result}", flush=True)
+        except Exception as e:
+            print(f"[daily-scan] Error: {e}", flush=True)
+
+
 @app.on_event("startup")
 async def startup():
     try:
@@ -60,6 +80,11 @@ async def startup():
     except Exception as e:
         # Log but don't crash — app runs without DB persistence
         print(f"WARNING: database init failed: {e}", flush=True)
+
+    # Pre-populate Virtuals tab without blocking startup
+    asyncio.create_task(_preload_virtuals_on_startup())
+    # Check for new agents every 24 hours
+    asyncio.create_task(_daily_virtuals_scan_loop())
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
